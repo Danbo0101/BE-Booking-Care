@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     phone: DataTypes.STRING,
-    image: DataTypes.STRING,
+    image: DataTypes.BLOB,
     isActive: DataTypes.TINYINT(1),
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,

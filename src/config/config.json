@@ -2,10 +2,14 @@
   "development": {
     "username": "root",
     "password": "123456",
-    "database": "test",
+    "database": "bookingcare",
     "host": "localhost",
     "dialect": "mysql",
-    "operatorsAliases": false
+    "operatorsAliases": false,
+    "timezone": "+07:00",
+    "query": {
+      "raw": true
+    }
   },
   "test": {
     "username": "root",

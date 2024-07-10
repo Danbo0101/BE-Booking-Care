@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       },
       allowNull: false,
+      primaryKey: true,
     },
     clinicId: {
       type: DataTypes.INTEGER,
@@ -16,6 +17,8 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       },
       allowNull: false,
+      unique: true
+
     },
     specialtiesId: {
       type: DataTypes.INTEGER,
@@ -34,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
     DoctorUser.belongsTo(models.User, { foreignKey: 'doctorId', as: 'doctor' });
     DoctorUser.belongsTo(models.Clinic, { foreignKey: 'clinicId', as: 'clinic' });
     DoctorUser.belongsTo(models.Specialties, { foreignKey: 'specialtiesId', as: 'specialties' });
-    DoctorUser.hasOne(models.Schedule, { foreignKey: 'doctorUserId', as: 'schedule' });
+    DoctorUser.hasOne(models.Schedule, { foreignKey: 'doctorId', as: 'schedule' });
   };
 
   return DoctorUser;

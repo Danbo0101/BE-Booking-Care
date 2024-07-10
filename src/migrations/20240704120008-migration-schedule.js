@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Schedule', {
+    await queryInterface.createTable('Schedules', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'DoctorUser',
+          model: 'DoctorUsers',
           key: 'doctorId'
         },
         onUpdate: 'CASCADE',
@@ -23,7 +23,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'TimeType',
+          model: 'TimeTypes',
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -42,6 +42,10 @@ module.exports = {
       date: {
         type: Sequelize.DATE,
         allowNull: false
+      },
+      currentNumber: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0
       },
       maxNumber: {
         type: Sequelize.INTEGER
@@ -63,6 +67,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Schedule');
+    await queryInterface.dropTable('Schedules');
   }
 };

@@ -2,14 +2,14 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('DoctorUser', {
+    await queryInterface.createTable('DoctorUsers', {
 
       doctorId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         primaryKey: true,
         references: {
-          model: 'User',
+          model: 'Users',
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -19,9 +19,10 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Clinic',
+          model: 'Clinics',
           key: 'id'
         },
+        unique: true,
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
@@ -52,6 +53,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('DoctorUser');
+    await queryInterface.dropTable('DoctorUsers');
   }
 };

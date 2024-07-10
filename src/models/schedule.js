@@ -29,6 +29,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: false
     },
+    currentNumber: DataTypes.INTEGER,
     maxNumber: DataTypes.INTEGER,
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
@@ -36,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
 
   Schedule.associate = function (models) {
-    Schedule.belongsTo(models.DoctorUser, { foreignKey: 'doctorUserId', as: 'doctorUser' });
+    Schedule.belongsTo(models.DoctorUser, { foreignKey: 'doctorId', as: 'doctorUser' });
     Schedule.belongsTo(models.TimeType, { foreignKey: 'timeTypeId', as: 'timeType' });
     Schedule.belongsTo(models.Status, { foreignKey: 'statusId', as: 'status' });
     Schedule.hasMany(models.Booking, { foreignKey: 'scheduleId', as: 'bookings' });

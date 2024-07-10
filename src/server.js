@@ -1,24 +1,62 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import dotenv from 'dotenv';
-import viewEngine from './config/viewEngine.js';
-import initWebRoutes from './route/web.js';
-import connectDB from './config/connectDB.js';
+const express = require('express');
+const bodyParser = require('body-parser');
+const dotenv = require('dotenv');
+const webRoutes = require('./route/web.js');
+const configViewEngine = require('./config/viewEngine.js');
+const connectDB = require('./config/connectDB.js');
+const fileUpload = require('express-fileupload');
+// const cors = require('cors');
 
-dotenv.config();
+require('dotenv').config();
 
 const app = express();
+// app.use(cors({ origin: true }));
+
+app.use(function (req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', process.env.URL_REACT);
+
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
+    // Pass to next layer of middleware
+    next();
+});
+
+//config fileUpload
+app.use(fileUpload());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-viewEngine(app);
-initWebRoutes(app);
-
-connectDB();
+configViewEngine(app);
+//route
+app.use('/v1/api/', webRoutes);
 
 const port = process.env.PORT || 6969;
+const hostname = process.env.hostname;
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+(async () => {
+    try {
+        // test connection 
+        await connectDB();;
+        app.listen(port, hostname, () => {
+            console.log(`Example app listening on port ${port}`)
+        })
+    } catch (error) {
+        console.log(error)
+    }
+
+})()
+
+
+
+

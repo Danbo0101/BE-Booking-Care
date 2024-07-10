@@ -11,10 +11,15 @@ module.exports = {
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
       },
       description: {
         type: Sequelize.STRING
+      },
+      isActive: {
+        type: Sequelize.TINYINT(1),
+        defaultValue: 1
       },
       createdAt: {
         allowNull: false,
