@@ -1,7 +1,7 @@
 import db from "../models/index";
 
 
-const createSpecialties = async (data) => {
+const createSpecialties = async (data, file) => {
     return new Promise(async (resolve, reject) => {
         try {
             let isExist = await db.Specialties.findOne({
@@ -15,15 +15,30 @@ const createSpecialties = async (data) => {
                 return;
             }
             else {
-                let specialties = await db.Specialties.create({
+                let dataCreate = {
                     name: data.name,
                     description: data.description,
-                })
-                resolve({
-                    ER: 0,
-                    message: "Specialties created successfully",
-                    data: specialties
-                })
+                }
+
+                if (file && file.image && file.image.data) {
+                    dataCreate.image = file.image.data;
+                }
+                let specialties = await db.Specialties.create(dataCreate)
+                if (specialties) {
+
+                    resolve({
+                        ER: 0,
+                        message: "Specialties created successfully",
+                        data: specialties
+                    })
+                }
+                else {
+                    resolve({
+                        ER: 1,
+                        message: "Failed to create specialties"
+                    })
+                }
+
             }
 
         } catch (error) {
@@ -54,11 +69,13 @@ const getSpecialties = async (queryString) => {
                     limit: +limit,
                     offset: offset,
                 });
+                let totalPage = Math.ceil(specialties.count / limit)
                 specialties = specialties.rows;
                 resolve({
                     ER: 0,
                     message: "Get specialties paginate successfully",
-                    data: specialties
+                    data: specialties,
+                    totalPage
                 });
             }
         } catch (error) {
@@ -67,7 +84,7 @@ const getSpecialties = async (queryString) => {
     })
 }
 
-const updateSpecialties = async (id, data) => {
+const updateSpecialties = async (id, data, file) => {
     return new Promise(async (resolve, reject) => {
         try {
             if (!id) {
@@ -88,26 +105,42 @@ const updateSpecialties = async (id, data) => {
                     return;
                 }
                 else {
-                    let specialties = await db.Specialties.update(
-                        {
-                            name: data.name,
-                            description: data.description,
-                        }
-                        ,
-                        {
-                            where: { id }
+                    let dataUpdate = {};
+                    if (data) {
+                        dataUpdate.name = data.name;
+                        dataUpdate.description = data.description;
+                    }
+
+                    if (file && file.image && file.image.data) {
+                        dataUpdate.image = file.image.data;
+                    }
+
+                    try {
+                        console.log('Data to update:', dataUpdate);
+                        console.log('ID:', id);
+
+                        let specialties = await db.Specialties.update(dataUpdate, {
+                            where: { id: id }
                         });
 
-                    if (specialties) {
-                        resolve({
-                            ER: 0,
-                            message: "Specialties updated successfully",
-                        })
+                        if (specialties) {
+                            resolve({
+                                ER: 0,
+                                message: "Specialties updated successfully",
+                            })
+                        }
+                        else {
+                            resolve({
+                                ER: 3,
+                                message: "Specialties updated failed",
+                            })
+                        }
+
+                    } catch (error) {
+                        console.error('Error updating specialties:', error);
                     }
-                    resolve({
-                        ER: 3,
-                        message: "Specialties updated failed",
-                    })
+
+
                 }
             }
         } catch (error) {
@@ -145,7 +178,11 @@ const deleteASpecialties = async (id) => {
                             where: { id }
                         });
 
-                    if (specialties) {
+                    let doctorUser = await db.DoctorUser.destroy({
+                        where: { specialtiesId: id }
+                    })
+
+                    if (specialties || doctorUser) {
                         resolve({
                             ER: 0,
                             message: "Specialties deleted successfully",
@@ -163,9 +200,35 @@ const deleteASpecialties = async (id) => {
     })
 }
 
+const getASpecialtiesInfo = async (specialtiesId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let specialties = await db.Specialties.findOne({
+                where: { id: specialtiesId }
+            })
+            if (specialties) {
+                resolve({
+                    ER: 0,
+                    message: "Get specialties info successfully",
+                    data: specialties
+                })
+            }
+            else {
+                resolve({
+                    ER: 2,
+                    message: "Specialties not found"
+                });
+            }
+        } catch (error) {
+            reject(error);
+        }
+    })
+}
+
 module.exports = {
     createSpecialties,
     getSpecialties,
     updateSpecialties,
-    deleteASpecialties
+    deleteASpecialties,
+    getASpecialtiesInfo
 }

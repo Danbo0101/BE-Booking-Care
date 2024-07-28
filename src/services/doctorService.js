@@ -32,7 +32,7 @@ const createDoctor = async (data, image) => {
                 })
                 let doctorInfo = await db.DoctorInfo.create({
                     doctorId: newDoctor.id,
-                    province: data.province,
+                    qualification: data.qualification,
                     price: data.price
                 })
                 let newDoctorData = newDoctor.toJSON();
@@ -59,15 +59,28 @@ const getDoctors = async (queryString) => {
             if (!page && !limit) {
                 let data = await db.User.findAll({
                     where: { roleId: 2, isActive: true },
-                    attributes: ['id', 'name', "image", 'email', "address", "gender", "phone", "isActive"]
+                    attributes: ['id', 'name', 'image', 'email', 'address', 'gender', 'phone']
                 });
+                const doctors = await Promise.all(data.map(async (user) => {
+                    const userDoctorInfo = await db.DoctorInfo.findOne({
+                        where: { doctorId: user.id }
+                    });
 
-                const doctorInfos = await db.DoctorInfo.findAll({
-                    where: { doctorId: data.map(user => user.id) }
-                });
+                    // Fetch doctor specialty for the user
+                    const doctorSpecialty = await db.DoctorUser.findOne({
+                        where: { doctorId: user.id }
+                    });
 
-                const doctors = data.map(user => {
-                    const userDoctorInfo = doctorInfos.find(info => info.doctorId === user.id);
+
+                    // Fetch the specialty details
+                    const specialty = doctorSpecialty ? await db.Specialties.findOne({
+                        where: { id: doctorSpecialty.specialtiesId, isActive: true }
+                    }) : null;
+
+                    const clinicty = doctorSpecialty ? await db.Clinic.findOne({
+                        where: { id: doctorSpecialty.clinicId, isActive: true }
+                    }) : null;
+
                     return {
                         id: user.id,
                         name: user.name,
@@ -76,11 +89,12 @@ const getDoctors = async (queryString) => {
                         address: user.address,
                         gender: user.gender,
                         phone: user.phone,
-                        province: userDoctorInfo.province,
-                        price: userDoctorInfo.price,
-                        isActive: user.isActive
+                        qualification: userDoctorInfo?.qualification || null,
+                        price: userDoctorInfo?.price || null,
+                        specialty: specialty?.name || null,
+                        clinic: clinicty?.name || null
                     };
-                });
+                }));
                 resolve(
                     {
                         ER: 0,
@@ -90,21 +104,43 @@ const getDoctors = async (queryString) => {
                 )
             }
             else {
-                // console.log(limit, page, offset);
                 let data = await db.User.findAndCountAll({
                     where: { roleId: 2, isActive: true },
                     limit: limit,
                     offset: offset,
-                    attributes: ['id', 'name', "image", 'email', "address", "gender", "phone", "isActive"]
+                    attributes: ['id', 'name', "image", 'email', "address", "gender", "phone"]
 
                 })
+                let totalPage = Math.ceil(data.count / limit);
                 data = data.rows;
-                let doctorInfos = await db.DoctorInfo.findAll({
-                    where: { doctorId: data.map(user => user.id) }
-                });
+                // let doctorInfos = await db.DoctorInfo.findAll({
+                //     where: { doctorId: data.map(user => user.id) }
+                // });
 
-                let doctors = data.map(user => {
-                    let userDoctorInfo = doctorInfos.find(info => info.doctorId === user.id);
+                const doctors = await Promise.all(data.map(async (user) => {
+
+                    const userDoctorInfo = await db.DoctorInfo.findOne({
+                        where: { doctorId: user.id }
+                    });
+
+                    // Fetch doctor specialty for the user
+                    const doctorSpecialty = await db.DoctorUser.findOne({
+                        where: { doctorId: user.id }
+                    });
+
+
+
+                    // Fetch the specialty details
+                    const specialty = doctorSpecialty ? await db.Specialties.findOne({
+                        where: { id: doctorSpecialty.specialtiesId, isActive: true }
+                    }) : null;
+
+                    const clinicty = doctorSpecialty ? await db.Clinic.findOne({
+                        where: { id: doctorSpecialty.clinicId, isActive: true }
+                    }) : null;
+
+
+
                     return {
                         id: user.id,
                         name: user.name,
@@ -113,16 +149,18 @@ const getDoctors = async (queryString) => {
                         address: user.address,
                         gender: user.gender,
                         phone: user.phone,
-                        province: userDoctorInfo.province,
-                        price: userDoctorInfo.price,
-                        isActive: user.isActive
+                        qualification: userDoctorInfo?.qualification || null,
+                        price: userDoctorInfo?.price || null,
+                        specialty: specialty?.name || null,
+                        clinic: clinicty?.name || null
                     };
-                });
+                }));
                 resolve(
                     {
                         ER: 0,
                         message: "Get doctors paginate successfully",
-                        data: doctors
+                        data: doctors,
+                        totalPage
                     }
                 )
             }
@@ -166,7 +204,7 @@ const updateDoctor = async (id, data, file) => {
                     };
 
                     if (file && file.image && file.image.data) {
-                        console.log(1);
+
                         updateFields.image = file.image.data;
                     }
                     let dataUpdate = await db.User.update(
@@ -177,7 +215,7 @@ const updateDoctor = async (id, data, file) => {
                     );
                     let dataUpdateInfo = await db.DoctorInfo.update(
                         {
-                            province: data.province,
+                            qualification: data.qualification,
                             price: data.price,
                         },
                         {
@@ -230,11 +268,26 @@ const deleteADoctor = async (id) => {
                             where: { id: id }
                         }
                     )
-                    resolve(
-                        {
-                            ER: 0,
-                            message: "Delete Doctor Success"
-                        });
+
+                    let doctorUser = await db.DoctorUser.destroy({
+                        where: { doctorId: id }
+                    })
+
+                    if (dataDelete && doctorUser) {
+                        resolve(
+                            {
+                                ER: 0,
+                                message: "Delete Doctor Success"
+                            });
+                    }
+                    else {
+                        resolve(
+                            {
+                                ER: 3,
+                                message: "Delete Doctor Failed"
+                            });
+                    }
+
                 }
             }
 
@@ -333,6 +386,41 @@ const assignDoctor = async (data) => {
     })
 }
 
+const getDoctorAssign = async (doctorId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!doctorId) {
+                resolve(
+                    {
+                        ER: 1,
+                        message: "Input doctor id"
+                    });
+                return;
+            }
+            let doctorAssign = await db.DoctorUser.findOne({
+                where: { doctorId },
+            })
+            if (doctorAssign) {
+                resolve(
+                    {
+                        ER: 0,
+                        message: "Get doctor assign successfully",
+                        data: doctorAssign
+                    });
+            }
+            else {
+                resolve(
+                    {
+                        ER: 2,
+                        message: "Doctor not found or not assign"
+                    });
+            }
+        } catch (error) {
+            reject(error);
+        }
+    })
+}
+
 const updateAssignDoctor = async (id, data) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -423,7 +511,6 @@ const getDoctorForSpecialties = async (specialtiesId) => {
             let doctorSpecialties = await db.DoctorUser.findAll({
                 where: { specialtiesId }
             })
-            console.log(doctorSpecialties);
             if (doctorSpecialties.length > 0) {
                 let doctors = [];
                 for (let item of doctorSpecialties) {
@@ -436,7 +523,7 @@ const getDoctorForSpecialties = async (specialtiesId) => {
                         where: { doctorId: item.doctorId }
                     })
                     if (data && doctorInfo) {
-                        data.province = doctorInfo.province;
+                        data.qualification = doctorInfo.qualification;
                         data.price = doctorInfo.price;
                         doctors.push(data);
                     }
@@ -469,6 +556,166 @@ const getDoctorForSpecialties = async (specialtiesId) => {
     })
 }
 
+const getDoctorForClinic = async (clinicId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let doctorClinic = await db.DoctorUser.findAll({
+                where: { clinicId }
+            })
+
+            if (doctorClinic.length > 0) {
+                let doctors = [];
+                for (let item of doctorClinic) {
+                    let data = await db.User.findOne({
+                        where: { id: item.doctorId, roleId: 2, isActive: true },
+                        attributes: ['id', 'name', "image", 'email', "address", "gender", "phone"]
+
+                    })
+                    let doctorInfo = await db.DoctorInfo.findOne({
+                        where: { doctorId: item.doctorId }
+                    })
+
+                    let specialties = await db.Specialties.findOne({
+                        where: { id: item.specialtiesId }
+                    })
+
+                    if (data && doctorInfo) {
+                        data.qualification = doctorInfo.qualification;
+                        data.price = doctorInfo.price;
+                        data.specialtiesName = specialties?.name || null;
+                        doctors.push(data);
+                    }
+                }
+                if (doctors.length > 0) {
+                    resolve(
+                        {
+                            ER: 0,
+                            message: "Get Doctors Specialties Success",
+                            data: doctors
+                        });
+                } else {
+                    resolve(
+                        {
+                            ER: 2,
+                            message: "No doctor found for this specialties"
+                        });
+                }
+            } else {
+                resolve(
+                    {
+                        ER: 2,
+                        message: "Doctor not found for this specialties"
+                    });
+                return;
+            }
+        } catch (error) {
+
+        }
+    })
+
+}
+
+const getADoctorClinicSpecialties = (doctorId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let doctor = await db.User.findOne({
+                where: { id: doctorId, roleId: 2, isActive: true },
+                attributes: ['id', 'name', 'image', 'email', 'address', 'gender', 'phone']
+            });
+
+            if (!doctor) {
+                resolve({
+                    ER: 2,
+                    message: "Doctor not found or inactive"
+                });
+                return;
+            }
+
+            let doctorInfo = await db.DoctorInfo.findOne({
+                where: { doctorId },
+                attributes: ['qualification', 'price']
+            });
+
+            let doctorUser = await db.DoctorUser.findOne({
+                where: { doctorId }
+            });
+
+            if (!doctorUser) {
+                resolve({
+                    ER: 100,
+                    message: "Doctor not assigned yet",
+                    data: {
+                        id: doctor.id,
+                        name: doctor.name,
+                        image: doctor.image,
+                        email: doctor.email,
+                        address: doctor.address,
+                        gender: doctor.gender,
+                        phone: doctor.phone,
+                        qualification: doctorInfo.qualification,
+                        price: doctorInfo.price
+                    }
+                });
+                return;
+            }
+
+            let clinic = await db.Clinic.findOne({
+                where: { id: doctorUser.clinicId, isActive: true },
+                attributes: ['id', 'name', 'address', 'description']
+            });
+
+            let specialties = await db.Specialties.findOne({
+                where: { id: doctorUser.specialtiesId, isActive: true },
+                attributes: ['id', 'name', 'description']
+            });
+
+
+
+            if (clinic && specialties) {
+                let doctorDetail = {
+                    doctor: {
+                        id: doctor.id,
+                        name: doctor.name,
+                        image: doctor.image,
+                        email: doctor.email,
+                        address: doctor.address,
+                        gender: doctor.gender,
+                        phone: doctor.phone,
+                        qualification: doctorInfo.qualification,
+                        price: doctorInfo.price
+                    },
+                    clinic: {
+                        id: clinic.id,
+                        name: clinic.name,
+                        address: clinic.address,
+                        description: clinic.description
+                    },
+                    specialties: {
+                        id: specialties.id,
+                        name: specialties.name,
+                        description: specialties.description
+                    },
+
+                }
+
+                resolve({
+                    ER: 0,
+                    message: "Get Doctor Detail Success",
+                    data: doctorDetail
+                });
+            } else {
+                resolve({
+                    ER: 2,
+                    message: "Doctor's clinic or specialties not found or inactive"
+                });
+            }
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+
+
 module.exports = {
     createDoctor,
     getDoctors,
@@ -476,5 +723,8 @@ module.exports = {
     deleteADoctor,
     assignDoctor,
     updateAssignDoctor,
-    getDoctorForSpecialties
+    getDoctorForSpecialties,
+    getDoctorForClinic,
+    getADoctorClinicSpecialties,
+    getDoctorAssign
 }

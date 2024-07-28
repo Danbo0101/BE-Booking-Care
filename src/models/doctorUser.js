@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       },
       allowNull: false,
-      unique: true
+
 
     },
     specialtiesId: {

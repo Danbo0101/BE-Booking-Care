@@ -14,10 +14,10 @@ module.exports = {
         allowNull: false
       },
       address: {
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
       },
       description: {
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
       },
       image: {
         type: Sequelize.BLOB

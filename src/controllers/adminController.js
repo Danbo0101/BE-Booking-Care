@@ -1,8 +1,10 @@
 const express = require('express');
-const { createDoctor, getDoctors, updateDoctor, deleteADoctor, assignDoctor, updateAssignDoctor, getDoctorForSpecialties } = require('../services/doctorService');
-const { createClinic, getClinic, updateClinic, deleteAClinic } = require('../services/clinicService');
-const { createSpecialties, getSpecialties, updateSpecialties, deleteASpecialties } = require('../services/specialtiesService');
-const { createSchedule, getADoctorSchedule } = require('../services/scheduleService');
+const { createDoctor, getDoctors, updateDoctor, deleteADoctor, assignDoctor, getDoctorAssign,
+    updateAssignDoctor, getDoctorForSpecialties, getDoctorForClinic, getADoctorClinicSpecialties } = require('../services/doctorService');
+const { createClinic, getClinic, updateClinic, deleteAClinic, getAClinicInfo } = require('../services/clinicService');
+const { createSpecialties, getSpecialties, updateSpecialties, deleteASpecialties, getASpecialtiesInfo } = require('../services/specialtiesService');
+const { createSchedule, getADoctorScheduleBooking, deleteAllDoctorSchedule, updateDoctorSchedule,
+    getScheduleDetail, getAllDotorSchedules, getTimeType } = require('../services/scheduleService');
 
 
 const postCreateDoctor = async (req, res) => {
@@ -27,7 +29,8 @@ const getAllDoctorPaginate = async (req, res) => {
     return res.status(200).json({
         ER: result.ER,
         message: result.message,
-        data: result.data ? result.data : {}
+        data: result.data ? result.data : {},
+        totalPage: result.totalPage
     })
 
 }
@@ -75,6 +78,28 @@ const getAllClinicPaginate = async (req, res) => {
 
     let result = await getClinic(req.query);
 
+    // console.log(result);
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {},
+        totalPage: result.totalPage ? result.totalPage : 0
+    })
+}
+
+const getClinicInfo = async (req, res) => {
+    let clinicId = req.query.clinicId;
+
+    if (!clinicId) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await getAClinicInfo(clinicId);
+
     return res.status(200).json({
         ER: result.ER,
         message: result.message,
@@ -87,6 +112,7 @@ const putUpdateClinic = async (req, res) => {
     let id = req.query.id;
 
     let result = await updateClinic(id, req.body, req.files)
+
 
     return res.status(200).json({
         ER: result.ER,
@@ -110,7 +136,7 @@ const deleteClinic = async (req, res) => {
 
 const postCreateSpecialties = async (req, res) => {
 
-    let result = await createSpecialties(req.body);
+    let result = await createSpecialties(req.body, req.files);
 
     return res.status(200).json({
         ER: result.ER,
@@ -126,13 +152,35 @@ const getAllSpecialtiesPaginate = async (req, res) => {
     return res.status(200).json({
         ER: result.ER,
         message: result.message,
+        data: result.data ? result.data : {},
+        totalPage: result.totalPage ? result.totalPage : 0
+    })
+}
+
+const getSpecialtiesInfo = async (req, res) => {
+    let specialtiesId = req.query.specialtiesId;
+
+    if (!specialtiesId) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await getASpecialtiesInfo(specialtiesId);
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
         data: result.data ? result.data : {}
     })
 }
 
 const putUpdateSpecialties = async (req, res) => {
     let id = req.query.id;
-    let result = await updateSpecialties(id, req.body)
+
+
+    let result = await updateSpecialties(id, req.body, req.files)
 
     return res.status(200).json({
         ER: result.ER,
@@ -165,6 +213,17 @@ const postAssignDoctor = async (req, res) => {
 
 }
 
+const getAssignDoctor = async (req, res) => {
+    let doctorId = req.query.doctorId;
+    let result = await getDoctorAssign(doctorId);
+    console.log(result)
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
 const putUpdateAssignDoctor = async (req, res) => {
     let id = req.query.doctorId;
     let result = await updateAssignDoctor(id, req.body);
@@ -187,9 +246,10 @@ const postCreateSchedule = async (req, res) => {
     })
 }
 
-const getDoctorSchedule = async (req, res) => {
+const getADoctorSchedule = async (req, res) => {
 
-    let result = await getADoctorSchedule(req.query, req.body);
+
+    let result = await getADoctorScheduleBooking(req.query);
 
     return res.status(200).json({
         ER: result.ER,
@@ -219,6 +279,101 @@ const getDoctorForSpecialtiesPaginate = async (req, res) => {
     })
 }
 
+const getDoctorForClinicPaginate = async (req, res) => {
+    let clinicId = req.query.clinicId;
+
+    if (!clinicId) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await getDoctorForClinic(clinicId)
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+const getDoctorClinicSpecialties = async (req, res) => {
+    let doctorId = req.query.doctorId;
+
+    if (!doctorId) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await getADoctorClinicSpecialties(doctorId)
+    // let test = result.data
+    // console.log(test.doctor.name)
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+const deleteDoctorSchedule = async (req, res) => {
+    let doctorId = req.query.doctorId;
+
+    let result = await deleteAllDoctorSchedule(doctorId, req.body);
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+const putUpdateDoctorSchedule = async (req, res) => {
+    let scheduleId = req.query.scheduleId;
+    let result = await updateDoctorSchedule(scheduleId, req.body);
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+const getDoctorScheduleDetail = async (req, res) => {
+    let scheduleId = req.query.scheduleId;
+    let result = await getScheduleDetail(scheduleId);
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+const getAllDoctorSchedule = async (req, res) => {
+
+    let result = await getAllDotorSchedules(req.query);
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+const getAllTimeType = async (req, res) => {
+    let result = await getTimeType();
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+
+
 
 
 module.exports = {
@@ -228,6 +383,7 @@ module.exports = {
     deleteDoctor,
     postCreateClinic,
     getAllClinicPaginate,
+    getClinicInfo,
     putUpdateClinic,
     deleteClinic,
     postCreateSpecialties,
@@ -237,6 +393,15 @@ module.exports = {
     postAssignDoctor,
     putUpdateAssignDoctor,
     postCreateSchedule,
-    getDoctorSchedule,
-    getDoctorForSpecialtiesPaginate
+    getADoctorSchedule,
+    getDoctorForSpecialtiesPaginate,
+    getDoctorForClinicPaginate,
+    getDoctorClinicSpecialties,
+    getAssignDoctor,
+    deleteDoctorSchedule,
+    putUpdateDoctorSchedule,
+    getDoctorScheduleDetail,
+    getAllDoctorSchedule,
+    getAllTimeType,
+    getSpecialtiesInfo
 }

@@ -22,7 +22,6 @@ module.exports = {
           model: 'Clinics',
           key: 'id'
         },
-        unique: true,
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },

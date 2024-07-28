@@ -14,7 +14,7 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
-      province: {
+      qualification: {
         type: Sequelize.STRING
       },
       price: {

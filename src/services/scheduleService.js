@@ -1,7 +1,8 @@
 import db from "../models/index";
 import compareDate from "../utils/compareDate";
 import checkStatusSchedule from "../utils/checkStatusSchedule";
-
+import sendEmail from "../middleware/sendEmail";
+import convertFormatDate from "../utils/convertFormatDate";
 
 const createSchedule = async (doctorId, data) => {
     return new Promise(async (resolve, reject) => {
@@ -60,9 +61,11 @@ const createSchedule = async (doctorId, data) => {
                         });
                     return;
                 }
+                console.log(data.date)
                 let isExistSchedule = await db.Schedule.findOne({
                     where: { doctorId: +doctorId, timeTypeId: +data.timeTypeId, date: new Date(data.date) }
                 })
+                console.log(isExistSchedule);
                 if (isExistSchedule) {
                     resolve(
                         {
@@ -106,11 +109,11 @@ const createSchedule = async (doctorId, data) => {
 
 }
 
-const getADoctorSchedule = async (queryString, data) => {
+const getADoctorScheduleBooking = async (queryString) => {
     return new Promise(async (resolve, reject) => {
         try {
             let doctorId = queryString.doctorId;
-            let date = new Date(data.date);
+            let date = new Date(queryString.date);
             if (!doctorId || !date) {
                 resolve(
                     {
@@ -132,7 +135,6 @@ const getADoctorSchedule = async (queryString, data) => {
                 return;
             }
             else {
-
                 let scheduleDoctor = await db.Schedule.findAll({
                     where: { doctorId: +doctorId, date }
                 });
@@ -145,7 +147,7 @@ const getADoctorSchedule = async (queryString, data) => {
 
                     for (let item of scheduleDoctor) {
                         let checkStatus = await checkStatusSchedule(item.id);
-                        console.log(checkStatus);
+                        // console.log(checkStatus);
                         if (!checkStatus) {
                             continue;
                         }
@@ -235,7 +237,338 @@ const updateStatus = async (scheduleId) => {
     })
 }
 
+const deleteAllDoctorSchedule = async (doctorId, data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!doctorId) {
+                resolve(
+                    {
+                        ER: 1,
+                        message: "Input doctor id"
+                    });
+                return;
+            }
+            if (!data) {
+                resolve(
+                    {
+                        ER: 1,
+                        message: "Input date"
+                    });
+                return;
+            }
+            let isScheduleDoctorExist = await db.Schedule.findOne({
+                where: { doctorId, date: new Date(data.date) }
+
+            })
+
+            if (isScheduleDoctorExist) {
+                let deleteScheduleDoctor = await db.Schedule.destroy({
+                    where: { doctorId, date: new Date(data.date) }
+                })
+                if (deleteScheduleDoctor) {
+                    resolve(
+                        {
+                            ER: 0,
+                            message: "Delete schedule success"
+                        });
+                }
+                else {
+                    resolve(
+                        {
+                            ER: 3,
+                            message: "Delete schedule failed"
+                        });
+                }
+            }
+            else {
+                resolve(
+                    {
+                        ER: 2,
+                        message: "Schedule not found"
+                    });
+                return;
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const updateDoctorSchedule = async (scheduleId, data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!scheduleId) {
+                resolve(
+                    {
+                        ER: 1,
+                        message: "Input schedule id"
+                    });
+                return;
+            }
+            let isExistSchedule = await db.Schedule.findOne({
+                where: { id: scheduleId }
+            })
+            if (isExistSchedule.statusId === 5 || isExistSchedule.statusId === 6) {
+                resolve(
+                    {
+                        ER: 2,
+                        message: "Schedule not found or already cancelled"
+                    });
+                return;
+            }
+
+            if (data.statusId) {
+                let doctor = await db.User.findOne({
+                    where: { id: isExistSchedule.doctorId, isActive: true, roleId: 2 }
+                })
+                if (!doctor) {
+                    resolve(
+                        {
+                            ER: 2,
+                            message: "Doctor not found or inactive"
+                        });
+                    return;
+                }
+
+                let allBooking = await db.Booking.findAll({
+                    where: { scheduleId }
+                })
+
+
+                const fetchEmails = async () => {
+                    let listEmail = [];
+                    for (let item of allBooking) {
+                        let patient = await db.User.findOne({
+                            where: { id: item.patientId }
+                        });
+                        listEmail.push(patient.email);
+                    }
+                    return listEmail.join(',');
+                };
+
+                let date = new Date(isExistSchedule.date);
+                let formattedDate = date.getDate().toString().padStart(2, '0') + '/' + (date.getMonth() + 1).toString().padStart(2, '0') + '/' + date.getFullYear();
+
+                fetchEmails().then(listEmailPatient => {
+                    console.log(listEmailPatient);
+                    sendEmail(listEmailPatient, "Cancel Booking", doctor.name, formattedDate)
+                }).catch(error => {
+                    console.error("Error fetching emails:", error);
+                });
+
+                let updateSchedule = await db.Schedule.update(
+                    { statusId: 5 },
+                    { where: { id: scheduleId } }
+                )
+
+                let updasteBooking = await db.Booking.update(
+                    { statusId: 5 },
+                    { where: { scheduleId } }
+                )
+
+                if (updateSchedule && updasteBooking) {
+                    resolve(
+                        {
+                            ER: 0,
+                            message: "Cancel booking success"
+                        });
+                }
+                else {
+                    resolve(
+                        {
+                            ER: 3,
+                            message: "Cancel booking failed"
+                        });
+                }
+
+            } else if (data.maxNumber) {
+                let updateSchedule = await db.Schedule.update(
+                    { maxNumber: data.maxNumber },
+                    { where: { id: scheduleId } }
+                )
+                if (updateSchedule) {
+                    resolve(
+                        {
+                            ER: 0,
+                            message: "Update schedule success"
+                        });
+                }
+                else {
+                    resolve(
+                        {
+                            ER: 3,
+                            message: "Update schedule failed"
+                        });
+                }
+            }
+        } catch (error) {
+
+        }
+    })
+}
+
+const getScheduleDetail = async (scheduleId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!scheduleId) {
+                resolve(
+                    {
+                        ER: 1,
+                        message: "Input schedule id"
+                    });
+                return;
+            }
+
+            let isExistSchedule = await db.Schedule.findOne({
+                where: { id: scheduleId }
+            })
+
+            if (isExistSchedule) {
+                let allBookingSchedule = await db.Booking.findAll({
+                    where: { scheduleId }
+                });
+
+                let patientList = await Promise.all(allBookingSchedule.map(async (item) => {
+                    let patient = await db.User.findOne({
+                        where: { id: item.patientId }
+                    });
+                    return {
+                        patientName: patient.name,
+                        patientEmail: patient.email,
+                        patientPhone: patient.phone,
+                        statusBooking: item.statusId
+                    };
+                }));
+
+                let dataTest = {
+                    scheduleId: scheduleId,
+                    date: convertFormatDate(isExistSchedule.date),
+                    patientList: patientList
+                }
+
+                resolve({
+                    ER: 0,
+                    data: dataTest
+                })
+
+            } else {
+                resolve(
+                    {
+                        ER: 2,
+                        message: "Schedule not found"
+                    });
+                return;
+            }
+        } catch (error) {
+
+        }
+    })
+}
+
+
+const getAllDotorSchedules = async (queryString) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!queryString.doctorId) {
+                resolve(
+                    {
+                        ER: 1,
+                        message: "Input doctor id"
+                    });
+                return;
+            }
+            else if (!queryString.date) {
+                resolve(
+                    {
+                        ER: 1,
+                        message: "Input date"
+                    });
+                return;
+            }
+
+            let doctorId = queryString.doctorId;
+            let date = new Date(queryString.date);
+            let isExistDoctor = await db.User.findOne({
+                where: { id: doctorId, isActive: true, roleId: 2 }
+            })
+
+            if (isExistDoctor) {
+                let doctorSchedule = await db.Schedule.findAll({
+                    where: { doctorId: +doctorId, date }
+                })
+
+                if (doctorSchedule.length > 0) {
+                    let updatedSchedules = [];
+                    for (let item of doctorSchedule) {
+                        let checkStatus = await checkStatusSchedule(item.id);
+                        let currentTime = new Date();
+                        let timeType = await db.TimeType.findOne({
+                            where: { id: item.timeTypeId }
+                        });
+                        if (timeType) {
+                            let [hours, minutes, seconds] = timeType.time.split(':');
+                            let scheduleTime = date.setUTCHours(hours, minutes, seconds);
+                            if (currentTime > scheduleTime) {
+                                let updateStatusSchedule = await db.Schedule.update({
+                                    statusId: 6
+                                },
+                                    { where: { id: item.id } }
+                                )
+                            }
+                            updatedSchedules.push({
+                                ...item,
+                                timeTypeName: timeType.name
+                            })
+                        }
+                    }
+                    resolve({
+                        ER: 0,
+                        data: updatedSchedules
+                    })
+                }
+                else {
+                    resolve(
+                        {
+                            ER: 0,
+                            message: "Doctor has no schedule on this date",
+                            data: ""
+                        });
+                    return;
+                }
+            } else {
+                resolve(
+                    {
+                        ER: 2,
+                        message: "Doctor not found or inactive"
+                    });
+                return;
+            }
+        } catch (error) {
+
+        }
+    })
+}
+
+const getTimeType = async () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let timeType = await db.TimeType.findAll();
+            resolve({
+                ER: 0,
+                data: timeType
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
 module.exports = {
     createSchedule,
-    getADoctorSchedule
+    getADoctorScheduleBooking,
+    deleteAllDoctorSchedule,
+    updateDoctorSchedule,
+    getScheduleDetail,
+    getAllDotorSchedules,
+    getTimeType
 }

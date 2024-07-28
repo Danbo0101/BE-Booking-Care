@@ -5,8 +5,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    address: DataTypes.STRING,
-    description: DataTypes.STRING,
+    address: DataTypes.TEXT,
+    description: DataTypes.TEXT,
     image: DataTypes.BLOB,
     isActive: DataTypes.TINYINT(1),
     createdAt: DataTypes.DATE,

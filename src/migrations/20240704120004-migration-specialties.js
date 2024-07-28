@@ -15,7 +15,10 @@ module.exports = {
         unique: true
       },
       description: {
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
+      },
+      image: {
+        type: Sequelize.BLOB
       },
       isActive: {
         type: Sequelize.TINYINT(1),

@@ -6,7 +6,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true
     },
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
+    image: DataTypes.BLOB,
     isActive: DataTypes.TINYINT(1),
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
