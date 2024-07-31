@@ -14,7 +14,7 @@ const createDoctor = async (data, image) => {
                 resolve(
                     {
                         ER: 1,
-                        message: "Email already exists"
+                        message: "Email đã tồn tại"
                     });
                 return;
             }
@@ -25,7 +25,7 @@ const createDoctor = async (data, image) => {
                     email: data.email,
                     password: passwordHash,
                     address: data.address,
-                    gender: data.gender === 1 ? 'female' : 'male', // 0: male, 1: female
+                    gender: data.gender === 1 ? 'Nữ' : 'Nam', // 0: male, 1: female
                     roleId: 2,
                     phone: data.phone,
                     image: image,
@@ -40,7 +40,7 @@ const createDoctor = async (data, image) => {
                 delete newDoctorData.image;
                 resolve({
                     ER: 0,
-                    message: "Doctor created successfully",
+                    message: "Tạo bác sĩ thành công",
                     data: { newDoctorData, doctorInfo }
                 })
             }
@@ -98,7 +98,7 @@ const getDoctors = async (queryString) => {
                 resolve(
                     {
                         ER: 0,
-                        message: "Get all doctors successfully",
+                        message: "Lấy tất cả bác sĩ thành công",
                         data: doctors
                     }
                 )
@@ -158,7 +158,7 @@ const getDoctors = async (queryString) => {
                 resolve(
                     {
                         ER: 0,
-                        message: "Get doctors paginate successfully",
+                        message: "Lấy danh sách phân trang bác sĩ thành công",
                         data: doctors,
                         totalPage
                     }
@@ -179,7 +179,7 @@ const updateDoctor = async (id, data, file) => {
                 resolve(
                     {
                         ER: 1,
-                        message: "Input doctor id"
+                        message: "Vui lòng nhập id"
                     });
                 return;
             }
@@ -191,7 +191,7 @@ const updateDoctor = async (id, data, file) => {
                     resolve(
                         {
                             ER: 2,
-                            message: "Doctor not found"
+                            message: "Không tồn tại bác sĩ"
                         });
                     return;
                 } else {
@@ -199,7 +199,7 @@ const updateDoctor = async (id, data, file) => {
                         name: data.name,
                         email: data.email,
                         address: data.address,
-                        gender: data.gender === 1 ? 'female' : 'male', // 0: male, 1: female
+                        gender: data.gender === 1 ? 'Nữ' : 'Nam', // 0: male, 1: female
                         phone: data.phone,
                     };
 
@@ -226,7 +226,7 @@ const updateDoctor = async (id, data, file) => {
                     resolve(
                         {
                             ER: 0,
-                            message: "Update Doctor Success",
+                            message: "Cập nhật Bác sĩ thành công",
                         });
 
                 }
@@ -244,7 +244,7 @@ const deleteADoctor = async (id) => {
                 resolve(
                     {
                         ER: 1,
-                        message: "Input doctor id"
+                        message: "Vui lòng nhập id"
                     });
                 return;
             }
@@ -256,10 +256,18 @@ const deleteADoctor = async (id) => {
                     resolve(
                         {
                             ER: 2,
-                            message: "Doctor not found"
+                            message: "Không tồn tại bác sĩ"
                         });
                     return;
-                } else {
+
+
+                }
+
+                let doctorUser = await db.DoctorUser.findOne({
+                    where: { doctorId: id }
+                })
+
+                if (!doctorUser) {
                     let dataDelete = await db.User.update(
                         {
                             isActive: false
@@ -269,22 +277,54 @@ const deleteADoctor = async (id) => {
                         }
                     )
 
-                    let doctorUser = await db.DoctorUser.destroy({
+                    let doctorUser = await db.DoctorUser.destoy({
                         where: { doctorId: id }
                     })
+                    resolve(
+                        {
+                            ER: 0,
+                            message: "Xoá bác sĩ thành công"
+                        });
+                    return;
+                }
+                else {
+                    let scheduleDoctor = await db.Schedule.findAll({
+                        where: { doctorId: id, statusId: 1 }
+                    })
 
-                    if (dataDelete && doctorUser) {
-                        resolve(
-                            {
-                                ER: 0,
-                                message: "Delete Doctor Success"
-                            });
+                    let isExistBooking = 0;
+                    for (let item in scheduleDoctor) {
+                        let booking = await db.Booking.findAll({
+                            where: { scheduleId: scheduleDoctor[item].id, statusId: 3 }
+                        })
+                        if (booking) {
+                            isExistBooking += 1;
+                        }
                     }
-                    else {
+                    if (isExistBooking > 0) {
                         resolve(
                             {
                                 ER: 3,
-                                message: "Delete Doctor Failed"
+                                message: "Không thể xoá bác sĩ này vì đã có lịch đang đặt trước"
+                            });
+                        return;
+                    }
+                    else {
+                        let dataDelete = await db.User.update(
+                            {
+                                isActive: false
+                            },
+                            {
+                                where: { id: id }
+                            }
+                        )
+                        let doctorUser = await db.DoctorUser.destoy({
+                            where: { doctorId: id }
+                        })
+                        resolve(
+                            {
+                                ER: 0,
+                                message: "Xoá bác sĩ thành công"
                             });
                     }
 
@@ -304,7 +344,7 @@ const assignDoctor = async (data) => {
                 resolve(
                     {
                         ER: 1,
-                        message: "Input require"
+                        message: "Vui lòng nhập thông tin"
                     });
                 return;
             }
@@ -348,7 +388,7 @@ const assignDoctor = async (data) => {
                     resolve(
                         {
                             ER: 2,
-                            message: "Doctor already assigned "
+                            message: "Bác sĩ đã được gán "
                         });
                     return;
                 }
@@ -362,7 +402,7 @@ const assignDoctor = async (data) => {
                         resolve(
                             {
                                 ER: 0,
-                                message: "Assign Doctor Success",
+                                message: "Gán bác sĩ thành công",
                                 data: assignDoctor
                             });
                     }
@@ -370,7 +410,7 @@ const assignDoctor = async (data) => {
                         resolve(
                             {
                                 ER: 3,
-                                message: "Assign Doctor Failed"
+                                message: "Gán bác sĩ thất bại"
                             });
                     }
                 }
@@ -393,7 +433,7 @@ const getDoctorAssign = async (doctorId) => {
                 resolve(
                     {
                         ER: 1,
-                        message: "Input doctor id"
+                        message: "Vui lòng nhập thông tin"
                     });
                 return;
             }
@@ -404,7 +444,7 @@ const getDoctorAssign = async (doctorId) => {
                 resolve(
                     {
                         ER: 0,
-                        message: "Get doctor assign successfully",
+                        message: "Lất thông tin gán bác sĩ thành công",
                         data: doctorAssign
                     });
             }
@@ -412,7 +452,7 @@ const getDoctorAssign = async (doctorId) => {
                 resolve(
                     {
                         ER: 2,
-                        message: "Doctor not found or not assign"
+                        message: "Bác sĩ chưa được gán hoặc không tồn tại"
                     });
             }
         } catch (error) {
@@ -428,7 +468,7 @@ const updateAssignDoctor = async (id, data) => {
                 resolve(
                     {
                         ER: 1,
-                        message: "Input require"
+                        message: "Vui lòng nhập thông tin"
                     });
                 return;
             }
@@ -445,7 +485,7 @@ const updateAssignDoctor = async (id, data) => {
                 resolve(
                     {
                         ER: 2,
-                        message: "Doctor not found or inactive"
+                        message: "Không tìm thấy bác sĩ"
                     });
                 return;
             }
@@ -453,7 +493,7 @@ const updateAssignDoctor = async (id, data) => {
                 resolve(
                     {
                         ER: 2,
-                        message: "Clinic not found or inactive"
+                        message: "Không tìm thấy phòng khám"
                     });
                 return;
             }
@@ -461,7 +501,7 @@ const updateAssignDoctor = async (id, data) => {
                 resolve(
                     {
                         ER: 2,
-                        message: "Specialties not found or inactive"
+                        message: "Không tìm thấy chuyên khoa"
                     });
             } else {
                 let isExistDoctorUser = await db.DoctorUser.findOne({
@@ -471,7 +511,7 @@ const updateAssignDoctor = async (id, data) => {
                     resolve(
                         {
                             ER: 2,
-                            message: "Doctor not assigned yet"
+                            message: "Bác sĩ chưa được gán"
                         });
                     return;
                 }
@@ -488,14 +528,14 @@ const updateAssignDoctor = async (id, data) => {
                     resolve(
                         {
                             ER: 0,
-                            message: "Update Assign Doctor Success"
+                            message: "Cập nhật bác sĩ thành công"
                         });
                 }
                 else {
                     resolve(
                         {
                             ER: 3,
-                            message: "Update Assign Doctor Failed"
+                            message: "Cập nhật bác sĩ thất bại"
                         });
                 }
             }
@@ -532,21 +572,21 @@ const getDoctorForSpecialties = async (specialtiesId) => {
                     resolve(
                         {
                             ER: 0,
-                            message: "Get Doctors Specialties Success",
+                            message: "Lấy thông tin thành công",
                             data: doctors
                         });
                 } else {
                     resolve(
                         {
                             ER: 2,
-                            message: "No doctor found for this specialties"
+                            message: "Không tồn tại bác sĩ thuộc chuyên khoa"
                         });
                 }
             } else {
                 resolve(
                     {
                         ER: 2,
-                        message: "Doctor not found for this specialties"
+                        message: "Không tồn tại bác sĩ thuộc chuyên khoa"
                     });
                 return;
             }
@@ -590,21 +630,21 @@ const getDoctorForClinic = async (clinicId) => {
                     resolve(
                         {
                             ER: 0,
-                            message: "Get Doctors Specialties Success",
+                            message: "Lấy thông tin thành công",
                             data: doctors
                         });
                 } else {
                     resolve(
                         {
                             ER: 2,
-                            message: "No doctor found for this specialties"
+                            message: "Không tồn tại bác sĩ thuộc phòng khám"
                         });
                 }
             } else {
                 resolve(
                     {
                         ER: 2,
-                        message: "Doctor not found for this specialties"
+                        message: "Không tồn tại bác sĩ thuộc phòng khám"
                     });
                 return;
             }
@@ -626,7 +666,7 @@ const getADoctorClinicSpecialties = (doctorId) => {
             if (!doctor) {
                 resolve({
                     ER: 2,
-                    message: "Doctor not found or inactive"
+                    message: "Không tìm thấy bác sĩ"
                 });
                 return;
             }
@@ -643,7 +683,7 @@ const getADoctorClinicSpecialties = (doctorId) => {
             if (!doctorUser) {
                 resolve({
                     ER: 100,
-                    message: "Doctor not assigned yet",
+                    message: "Bác sĩ chưa được gán",
                     data: {
                         id: doctor.id,
                         name: doctor.name,
@@ -700,13 +740,13 @@ const getADoctorClinicSpecialties = (doctorId) => {
 
                 resolve({
                     ER: 0,
-                    message: "Get Doctor Detail Success",
+                    message: "Lấy thông tin thành công",
                     data: doctorDetail
                 });
             } else {
                 resolve({
                     ER: 2,
-                    message: "Doctor's clinic or specialties not found or inactive"
+                    message: "Bác sĩ chưa được gán"
                 });
             }
         } catch (error) {

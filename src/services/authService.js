@@ -85,20 +85,20 @@ const sendOtp = async (email) => {
                 if (result) {
                     resolve({
                         ER: 0,
-                        message: "OTP sent successfully"
+                        message: "Gửi OTP thành công"
                     })
                 }
                 else {
                     resolve({
                         ER: 3,
-                        message: "Send OTP failed"
+                        message: "Gửi OTP thất bại"
                     })
                 }
             }
             else {
                 resolve({
                     ER: 1,
-                    message: "Email is exist"
+                    message: "Email đã tồn tại"
                 })
             }
         } catch (error) {
@@ -120,13 +120,13 @@ const sendOtpForgot = async (email) => {
                 if (result) {
                     resolve({
                         ER: 0,
-                        message: "OTP sent successfully"
+                        message: "Gửi OTP thành công"
                     })
                 }
                 else {
                     resolve({
                         ER: 3,
-                        message: "Send OTP failed"
+                        message: "Gửi OTP thất bại"
                     })
                 }
             }
@@ -152,24 +152,24 @@ const verifyOtp = async (email, otp) => {
                 if (Date.now() > storedOtp.expiresAt) {
                     resolve({
                         ER: 3,
-                        message: "OTP has expired"
+                        message: "OTP đã hết hạn"
                     });
                 } else if (storedOtp.otpCode === otp) {
                     delete otpStore[email];
                     resolve({
                         ER: 0,
-                        message: "OTP is correct"
+                        message: "OTP đúng"
                     });
                 } else {
                     resolve({
                         ER: 2,
-                        message: "OTP is incorrect"
+                        message: "OTP sai"
                     });
                 }
             } else {
                 resolve({
                     ER: 2,
-                    message: "OTP does not exist"
+                    message: "OTP không tồn tại"
                 });
             }
         } catch (error) {
@@ -338,7 +338,7 @@ const updatePassword = async (id, data) => {
                     if (data.newPassword !== data.confirmPassword) {
                         resolve({
                             ER: 4,
-                            message: "New password and confirm password not match"
+                            message: "Mật khẩu mới và xác nhận mật khẩu mới không khớp"
                         })
                         return;
                     }
@@ -350,19 +350,19 @@ const updatePassword = async (id, data) => {
                     if (updateUser) {
                         resolve({
                             ER: 0,
-                            message: "Update password successfully",
+                            message: "Cập nhật mật khẩu thành công",
                         })
                     }
                     else {
                         resolve({
                             ER: 1,
-                            message: "Error update password"
+                            message: "Cập nhật mật khẩu thất bại"
                         })
                     }
                 } else {
                     resolve({
                         ER: 3,
-                        message: "Wrong password"
+                        message: "Sai mật khẩu cũ"
                     })
                     return;
                 }

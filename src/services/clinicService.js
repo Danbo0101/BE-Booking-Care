@@ -142,27 +142,75 @@ const deleteAClinic = async (id) => {
                     return;
                 }
                 else {
-                    let clinic = await db.Clinic.update({ isActive: false }, {
-                        where: { id }
-                    });
 
-                    let doctorUser = await db.DoctorUser.destroy({
+                    let allDoctor = await db.DoctorUser.findAll({
                         where: { clinicId: id }
                     })
-
-                    if (clinic || doctorUser) {
-                        resolve({
-                            ER: 0,
-                            message: "Clinic deleted successfully",
-                        })
+                    if (!allDoctor) {
+                        let dataDelete = await db.Clinic.update(
+                            {
+                                isActive: false
+                            },
+                            {
+                                where: { id: id }
+                            }
+                        )
+                        resolve(
+                            {
+                                ER: 0,
+                                message: "Xoá phòng khám thành công"
+                            });
+                        return;
                     }
-                    else {
-                        resolve({
-                            ER: 1,
-                            message: "Error when delete clinic"
-                        })
-                    }
 
+                    for (let item in allDoctor) {
+
+                        let scheduleDoctor = await db.Schedule.findAll({
+                            where: { doctorId: allDoctor[item].doctorId, statusId: 1 }
+                        })
+
+
+                        let isExistBooking = 0;
+                        for (let item in scheduleDoctor) {
+                            let booking = await db.Booking.findAll({
+                                where: { scheduleId: scheduleDoctor[item].id, statusId: 3 }
+                            })
+
+                            if (booking) {
+                                isExistBooking = 1;
+                            }
+                        }
+
+                        if (isExistBooking = 1) {
+                            resolve(
+                                {
+                                    ER: 3,
+                                    message: "Không thể xoá phòng này vì đã có lịch đang đặt trước"
+                                });
+                            return;
+                        }
+                        else {
+                            let dataDelete = await db.Clinic.update(
+                                {
+                                    isActive: false
+                                },
+                                {
+                                    where: { id: id }
+                                }
+                            )
+
+                            let doctorUser = await db.DoctorUser.destoy({
+                                where: { clinicId: id }
+                            })
+                            resolve(
+                                {
+                                    ER: 0,
+                                    message: "Xoá phòng khám thành công"
+                                });
+                        }
+
+
+                    }
 
                 }
             }

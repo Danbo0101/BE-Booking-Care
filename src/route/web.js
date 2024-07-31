@@ -8,9 +8,11 @@ const { postCreateDoctor, getAllDoctorPaginate, putUpdateDoctor, deleteDoctor, g
     postCreateSpecialties, getAllSpecialtiesPaginate, putUpdateSpecialties, deleteSpecialties, getDoctorClinicSpecialties, getSpecialtiesInfo,
     postAssignDoctor, putUpdateAssignDoctor, getAssignDoctor,
     postCreateSchedule, getADoctorSchedule, deleteDoctorSchedule, putUpdateDoctorSchedule, getDoctorScheduleDetail, getAllDoctorSchedule,
-    getAllTimeType
+    getAllTimeType, getDoctorReport, getClinicReport, getSpecialtiesReport
 } = require('../controllers/adminController');
-const { postCreateBooking, deleteCancelBooking, getScheduleBookking, getBookingPatient } = require('../controllers/bookingController');
+const { postCreateBooking, deleteCancelBooking, getScheduleBookking, getBookingPatient,
+    getBookingMonthly, getBookingClinic, getBookingSpecialties
+} = require('../controllers/bookingController');
 const auth = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const checkLogin = require('../middleware/checkLogin');
@@ -106,7 +108,15 @@ router.delete('/bookings', deleteCancelBooking);
 router.get('/bookings', getScheduleBookking);
 router.get('/history-bookings', getBookingPatient);
 
-
 router.get('/time-type', getAllTimeType);
+
+router.get('/doctor-report', getDoctorReport);
+router.get('/clinic-report', getClinicReport);
+router.get('/specialties-report', getSpecialtiesReport);
+
+router.get('/booking-monthly', getBookingMonthly);
+router.get('/booking-clinic', getBookingClinic);
+router.get('/booking-specialties', getBookingSpecialties);
+
 
 module.exports = router;

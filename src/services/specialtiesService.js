@@ -170,28 +170,77 @@ const deleteASpecialties = async (id) => {
                     return;
                 }
                 else {
-                    let specialties = await db.Specialties.update(
-                        {
-                            isActive: false
-                        },
-                        {
-                            where: { id }
-                        });
 
-                    let doctorUser = await db.DoctorUser.destroy({
+                    let allDoctor = await db.DoctorUser.findAll({
                         where: { specialtiesId: id }
                     })
 
-                    if (specialties || doctorUser) {
-                        resolve({
-                            ER: 0,
-                            message: "Specialties deleted successfully",
-                        })
+
+                    if (!allDoctor) {
+                        let dataDelete = await db.Specialties.update(
+                            {
+                                isActive: false
+                            },
+                            {
+                                where: { id: id }
+                            }
+                        )
+                        resolve(
+                            {
+                                ER: 0,
+                                message: "Xoá chuyên khoa thành công"
+                            });
+                        return;
                     }
-                    resolve({
-                        ER: 3,
-                        message: "Specialties deleted failed",
-                    })
+
+                    for (let item in allDoctor) {
+
+                        let scheduleDoctor = await db.Schedule.findAll({
+                            where: { doctorId: allDoctor[item].doctorId, statusId: 1 }
+                        })
+
+
+                        let isExistBooking = 0;
+                        for (let item in scheduleDoctor) {
+                            let booking = await db.Booking.findAll({
+                                where: { scheduleId: scheduleDoctor[item].id, statusId: 3 }
+                            })
+
+                            if (booking) {
+                                isExistBooking = 1;
+                            }
+                        }
+
+                        if (isExistBooking = 1) {
+                            resolve(
+                                {
+                                    ER: 3,
+                                    message: "Không thể xoá chuyên khoa này vì đã có lịch đang đặt trước"
+                                });
+                            return;
+                        }
+                        else {
+                            let dataDelete = await db.Specialties.update(
+                                {
+                                    isActive: false
+                                },
+                                {
+                                    where: { id: id }
+                                }
+                            )
+                            let doctorUser = await db.DoctorUser.destoy({
+                                where: { specialtiesId: id }
+                            })
+                            resolve(
+                                {
+                                    ER: 0,
+                                    message: "Xoá chuyên khoa thành công"
+                                });
+                        }
+
+
+                    }
+
                 }
             }
         } catch (error) {

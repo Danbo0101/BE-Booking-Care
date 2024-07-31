@@ -5,7 +5,7 @@ const { createClinic, getClinic, updateClinic, deleteAClinic, getAClinicInfo } =
 const { createSpecialties, getSpecialties, updateSpecialties, deleteASpecialties, getASpecialtiesInfo } = require('../services/specialtiesService');
 const { createSchedule, getADoctorScheduleBooking, deleteAllDoctorSchedule, updateDoctorSchedule,
     getScheduleDetail, getAllDotorSchedules, getTimeType } = require('../services/scheduleService');
-
+const { doctorReport, clinicReport, specialtiesReport } = require("../services/reportService")
 
 const postCreateDoctor = async (req, res) => {
 
@@ -372,6 +372,69 @@ const getAllTimeType = async (req, res) => {
     })
 }
 
+const getDoctorReport = async (req, res) => {
+    let doctorId = req.query.doctorId;
+    let month = req.query.month;
+    let year = req.query.year;
+
+    if (!doctorId || !month || !year) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await doctorReport(doctorId, month, year);
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+const getClinicReport = async (req, res) => {
+    let clinicId = req.query.clinicId;
+    let month = req.query.month;
+    let year = req.query.year;
+
+    if (!clinicId || !month || !year) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await clinicReport(clinicId, month, year);
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+const getSpecialtiesReport = async (req, res) => {
+    let specialtiesId = req.query.specialtiesId;
+    let month = req.query.month;
+    let year = req.query.year;
+
+    if (!specialtiesId || !month || !year) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await specialtiesReport(specialtiesId, month, year);
+
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
 
 
 
@@ -403,5 +466,8 @@ module.exports = {
     getDoctorScheduleDetail,
     getAllDoctorSchedule,
     getAllTimeType,
-    getSpecialtiesInfo
+    getSpecialtiesInfo,
+    getDoctorReport,
+    getClinicReport,
+    getSpecialtiesReport
 }

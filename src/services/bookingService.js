@@ -13,7 +13,7 @@ const createBooking = async (patientId, data) => {
                 resolve(
                     {
                         ER: 2,
-                        message: "Pantient not found or inactive"
+                        message: "Không tìm thấy bệnh nhân"
                     });
                 return;
             }
@@ -28,7 +28,7 @@ const createBooking = async (patientId, data) => {
                         resolve(
                             {
                                 ER: 2,
-                                message: "Schedule is not available"
+                                message: "Lịch không tồn tại"
                             });
                         return;
                     } else {
@@ -38,7 +38,7 @@ const createBooking = async (patientId, data) => {
                             resolve(
                                 {
                                     ER: 2,
-                                    message: "Patient duplicate schedule"
+                                    message: "Bạn đã đặt trùng lịch khám"
                                 });
                             return;
                         }
@@ -46,7 +46,7 @@ const createBooking = async (patientId, data) => {
                             resolve(
                                 {
                                     ER: 2,
-                                    message: "Patient duplicate doctor"
+                                    message: "Bạn đã đặt trùng bác sĩ"
                                 });
                             return;
                         }
@@ -68,7 +68,7 @@ const createBooking = async (patientId, data) => {
                                 resolve(
                                     {
                                         ER: 0,
-                                        message: "Booking created successfully",
+                                        message: "Đặt lịch khám thành công",
                                         data: createBooking
                                     });
                             }
@@ -76,7 +76,7 @@ const createBooking = async (patientId, data) => {
                                 resolve(
                                     {
                                         ER: 3,
-                                        message: "Booking created failed"
+                                        message: "Đặt lịch khám thất bại"
                                     });
                             }
                         }
@@ -386,10 +386,160 @@ const getScheduleForBookking = async (scheduleId) => {
     })
 }
 
+const bookingMonthly = async (year) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let booking = await db.Booking.findAll({
+                where: { statusId: 3 }
+            });
+
+            let data = await Promise.all(booking.map(async (item) => {
+                let schedule = await db.Schedule.findOne({
+                    where: { id: item.scheduleId }
+                });
+                return {
+                    ...item,
+                    date: schedule.date,
+                };
+            }));
+
+            let monthlyBookings = Array(12).fill(0);
+
+            data.forEach(item => {
+                let month = item.date.getMonth();
+                monthlyBookings[month] += 1;
+            })
+
+            resolve({
+                ER: 0,
+                data: monthlyBookings
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const bookingClinc = async () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let clinicActive = await db.Clinic.findAll({
+                where: { isActive: true },
+                attributes: ["id", "name"]
+            })
+
+            let data = await Promise.all(clinicActive.map(async (item) => {
+                let doctors = await db.DoctorUser.findAll({
+                    where: { clinicId: item.id },
+                    attributes: ['doctorId']
+                });
+
+                let doctorIds = doctors.map(doctor => doctor.doctorId);
+
+                return {
+                    clinicName: item.name,
+                    doctorIds: doctorIds
+                };
+            }));
+            let clinicBookingCounts = [];
+
+            for (let item of data) {
+                let totalClinicBookings = 0;
+
+                await Promise.all(item.doctorIds.map(async (doctorId) => {
+                    let schedules = await db.Schedule.findAll({
+                        where: { doctorId: doctorId }
+                    });
+                    schedules = schedules.filter(schedule => schedule.statusId !== 5);
+                    let totalBookings = schedules.reduce((sum, schedule) => sum + schedule.currentNumber, 0);
+                    totalClinicBookings += totalBookings;
+                }));
+                clinicBookingCounts.push({
+                    label: item.clinicName,
+                    value: totalClinicBookings
+                });
+
+                // console.log(`Clinic ${item.clinicId}:`, totalClinicBookings);
+            }
+
+            resolve({
+                ER: 0,
+                data: clinicBookingCounts
+            })
+
+        } catch (error) {
+
+        }
+    })
+}
+
+const bookingSpecialties = async () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let specialtiesActive = await db.Specialties.findAll({
+                where: { isActive: true },
+                attributes: ["id", "name"]
+            });
+
+            let data = await Promise.all(specialtiesActive.map(async (item) => {
+                let doctors = await db.DoctorUser.findAll({
+                    where: { specialtiesId: item.id },
+                    attributes: ['doctorId']
+                });
+
+                let doctorIds = doctors.map(doctor => doctor.doctorId);
+
+                return {
+                    specialtiesName: item.name,
+                    doctorIds: doctorIds
+                };
+            }));
+
+            let specialtiesBookingCounts = [];
+
+            for (let item of data) {
+                let totalSpecialtiesBookings = 0;
+
+                await Promise.all(item.doctorIds.map(async (doctorId) => {
+                    let schedules = await db.Schedule.findAll({
+                        where: { doctorId: doctorId }
+                    });
+
+                    schedules = schedules.filter(schedule => schedule.statusId !== 5);
+
+                    let totalBookings = schedules.reduce((sum, schedule) => sum + schedule.currentNumber, 0);
+
+                    totalSpecialtiesBookings += totalBookings;
+                }));
+
+                specialtiesBookingCounts.push({
+                    label: item.specialtiesName,
+                    value: totalSpecialtiesBookings
+                });
+            }
+
+            resolve({
+                ER: 0,
+                data: specialtiesBookingCounts
+            });
+
+        } catch (error) {
+            reject({
+                ER: 1,
+                message: error.message
+            });
+        }
+    });
+};
+
+
 
 module.exports = {
     createBooking,
     cancelBooking,
     getBookingAPatient,
-    getScheduleForBookking
+    getScheduleForBookking,
+    bookingMonthly,
+    bookingClinc,
+    bookingSpecialties
 }

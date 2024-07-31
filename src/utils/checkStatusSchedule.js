@@ -7,23 +7,10 @@ const checkStatusSchedule = async (scheduleId) => {
                 where: { id: scheduleId }
             })
             // console.log(schedule);
-            if (schedule.statusId === 5) {
+            if (schedule.statusId === 5 || schedule.statusId === 6) {
+                // console.log(1)
                 resolve(false);
                 return;
-            }
-
-            let checkDate = compareDate(schedule.date);
-            console.log(checkDate)
-            if (!checkDate) {
-                let updateStatusSchedule = await db.Schedule.update({
-                    statusId: 6
-                },
-                    { where: { id: scheduleId } }
-                )
-                if (updateStatusSchedule) {
-                    resolve(false);
-                    return;
-                }
             }
 
             if (schedule && schedule.currentNumber === schedule.maxNumber) {

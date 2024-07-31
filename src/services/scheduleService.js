@@ -146,6 +146,7 @@ const getADoctorScheduleBooking = async (queryString) => {
                     let currentTime = new Date();
 
                     for (let item of scheduleDoctor) {
+                        console.log(1)
                         let checkStatus = await checkStatusSchedule(item.id);
                         // console.log(checkStatus);
                         if (!checkStatus) {
@@ -465,7 +466,6 @@ const getScheduleDetail = async (scheduleId) => {
     })
 }
 
-
 const getAllDotorSchedules = async (queryString) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -501,20 +501,10 @@ const getAllDotorSchedules = async (queryString) => {
                     let updatedSchedules = [];
                     for (let item of doctorSchedule) {
                         let checkStatus = await checkStatusSchedule(item.id);
-                        let currentTime = new Date();
                         let timeType = await db.TimeType.findOne({
                             where: { id: item.timeTypeId }
                         });
                         if (timeType) {
-                            let [hours, minutes, seconds] = timeType.time.split(':');
-                            let scheduleTime = date.setUTCHours(hours, minutes, seconds);
-                            if (currentTime > scheduleTime) {
-                                let updateStatusSchedule = await db.Schedule.update({
-                                    statusId: 6
-                                },
-                                    { where: { id: item.id } }
-                                )
-                            }
                             updatedSchedules.push({
                                 ...item,
                                 timeTypeName: timeType.name
