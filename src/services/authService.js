@@ -1,6 +1,7 @@
 import sendEmail from "../middleware/sendEmail";
 import db from "../models/index";
 import bcrypt from "bcryptjs";
+import { markAttendance } from "./attendanceService";
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -32,6 +33,9 @@ const handleLogin = async (email, password) => {
                                 expiresIn: process.env.JWT_EXPIRE
                             }
                         )
+                        if (user.roleId === 2) {
+                            markAttendance(user.id)
+                        }
                         user.access_token = access_token;
                         loginData.userData = user;
                     } else {

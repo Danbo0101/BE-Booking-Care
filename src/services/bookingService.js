@@ -532,6 +532,206 @@ const bookingSpecialties = async () => {
     });
 };
 
+const bookingOfClinic = async (clinicId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let clinic = await db.Clinic.findOne({
+                where: { id: clinicId, isActive: true }
+            });
+
+            if (!clinic) {
+                resolve({
+                    ER: 2,
+                    message: "Clinic not found or inactive"
+                });
+                return;
+            }
+
+            let doctors = await db.DoctorUser.findAll({
+                where: { clinicId: clinicId },
+                attributes: ['doctorId']
+            });
+
+            let doctorIds = doctors.map(doctor => doctor.doctorId);
+
+            let totalClinicBookings = 0;
+            let allBookings = [];
+
+            let clinicDetail = await Promise.all(doctorIds.map(async (item) => {
+                let doctor = await db.User.findOne({
+                    where: { id: item, roleId: 2, isActive: true }
+                });
+
+                let doctorInfo = await db.DoctorInfo.findOne({
+                    where: { doctorId: item }
+                });
+
+                let doctorUser = await db.DoctorUser.findOne({
+                    where: { doctorId: item }
+                });
+
+                let specialties = await db.Specialties.findOne({
+                    where: { id: doctorUser.specialtiesId, isActive: true }
+                });
+
+                let schedules = await db.Schedule.findAll({
+                    where: { doctorId: item }
+                });
+
+                schedules = schedules.filter(schedule => schedule.statusId !== 5);
+
+                let totalBookings = schedules.reduce((sum, schedule) => sum + schedule.currentNumber, 0);
+                totalClinicBookings += totalBookings;
+
+                let bookings = await Promise.all(schedules.map(async (schedule) => {
+                    let bookings = await db.Booking.findAll({
+                        where: { scheduleId: schedule.id },
+                        attributes: ['id', 'scheduleId', 'patientId', 'statusId']
+                    });
+
+                    bookings = bookings.filter(booking => booking.statusId !== 5);
+
+                    return Promise.all(bookings.map(async (booking) => {
+                        let patient = await db.User.findOne({
+                            where: { id: booking.patientId }
+                        });
+
+                        return {
+                            id: booking.id,
+                            patientName: patient.name,
+                            patientEmail: patient.email,
+                            patientPhone: patient.phone,
+                            doctorName: doctor.name,
+                            specialtiesName: specialties.name,
+                            qualification: doctorInfo.qualification,
+                            price: doctorInfo.price
+                        };
+                    }));
+                }));
+
+                bookings = bookings.flat();
+                allBookings.push(...bookings);
+
+                return {
+                    totalClinicBookings,
+                    bookings: allBookings
+                };
+            }));
+
+            resolve({
+                ER: 0,
+                data: {
+                    totalClinicBookings,
+                    bookings: allBookings
+                }
+            });
+
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const bookingOfSpecialties = async (specialtiesId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let specialties = await db.Specialties.findOne({
+                where: { id: specialtiesId, isActive: true }
+            });
+
+            if (!specialties) {
+                resolve({
+                    ER: 2,
+                    message: "Specialties not found or inactive"
+                });
+                return;
+            }
+
+            let doctors = await db.DoctorUser.findAll({
+                where: { specialtiesId: specialtiesId },
+                attributes: ['doctorId']
+            });
+
+            let doctorIds = doctors.map(doctor => doctor.doctorId);
+
+            let totalClinicBookings = 0;
+            let allBookings = [];
+
+            let scpecialtiesDetail = await Promise.all(doctorIds.map(async (item) => {
+                let doctor = await db.User.findOne({
+                    where: { id: item, roleId: 2, isActive: true }
+                });
+
+                let doctorInfo = await db.DoctorInfo.findOne({
+                    where: { doctorId: item }
+                });
+
+                let doctorUser = await db.DoctorUser.findOne({
+                    where: { doctorId: item }
+                });
+
+                let clinic = await db.Clinic.findOne({
+                    where: { id: doctorUser.clinicId, isActive: true }
+                });
+
+                let schedules = await db.Schedule.findAll({
+                    where: { doctorId: item }
+                });
+
+                schedules = schedules.filter(schedule => schedule.statusId !== 5);
+
+                let totalBookings = schedules.reduce((sum, schedule) => sum + schedule.currentNumber, 0);
+                totalClinicBookings += totalBookings;
+
+                let bookings = await Promise.all(schedules.map(async (schedule) => {
+                    let bookings = await db.Booking.findAll({
+                        where: { scheduleId: schedule.id },
+                        attributes: ['id', 'scheduleId', 'patientId', 'statusId']
+                    });
+
+                    bookings = bookings.filter(booking => booking.statusId !== 5);
+
+                    return Promise.all(bookings.map(async (booking) => {
+                        let patient = await db.User.findOne({
+                            where: { id: booking.patientId }
+                        });
+
+                        return {
+                            id: booking.id,
+                            patientName: patient.name,
+                            patientEmail: patient.email,
+                            patientPhone: patient.phone,
+                            doctorName: doctor.name,
+                            clinic: clinic.name,
+                            qualification: doctorInfo.qualification,
+                            price: doctorInfo.price
+                        };
+                    }));
+                }));
+
+                bookings = bookings.flat();
+                allBookings.push(...bookings);
+
+                return {
+                    totalClinicBookings,
+                    bookings: allBookings
+                };
+            }));
+
+            resolve({
+                ER: 0,
+                data: {
+                    totalClinicBookings,
+                    bookings: allBookings
+                }
+            });
+
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
 
 
 module.exports = {
@@ -541,5 +741,7 @@ module.exports = {
     getScheduleForBookking,
     bookingMonthly,
     bookingClinc,
-    bookingSpecialties
+    bookingSpecialties,
+    bookingOfClinic,
+    bookingOfSpecialties
 }

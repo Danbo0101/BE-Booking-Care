@@ -146,7 +146,7 @@ const deleteAClinic = async (id) => {
                     let allDoctor = await db.DoctorUser.findAll({
                         where: { clinicId: id }
                     })
-                    if (!allDoctor) {
+                    if (allDoctor.length < 1) {
                         let dataDelete = await db.Clinic.update(
                             {
                                 isActive: false
@@ -176,12 +176,12 @@ const deleteAClinic = async (id) => {
                                 where: { scheduleId: scheduleDoctor[item].id, statusId: 3 }
                             })
 
-                            if (booking) {
+                            if (booking.length > 0) {
                                 isExistBooking = 1;
                             }
                         }
 
-                        if (isExistBooking = 1) {
+                        if (isExistBooking === 1) {
                             resolve(
                                 {
                                     ER: 3,
@@ -199,14 +199,23 @@ const deleteAClinic = async (id) => {
                                 }
                             )
 
-                            let doctorUser = await db.DoctorUser.destoy({
+                            let doctorUser = await db.DoctorUser.destroy({
                                 where: { clinicId: id }
                             })
-                            resolve(
-                                {
-                                    ER: 0,
-                                    message: "Xoá phòng khám thành công"
+                            if (dataDelete || doctorUser) {
+                                resolve(
+                                    {
+                                        ER: 0,
+                                        message: "Xoá phòng khám thành công"
+                                    });
+                            }
+                            else {
+                                resolve({
+                                    ER: 1,
+                                    message: "Xoá phòng khám thất bại"
                                 });
+                            }
+
                         }
 
 

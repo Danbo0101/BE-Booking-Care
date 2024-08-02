@@ -11,11 +11,13 @@ const { postCreateDoctor, getAllDoctorPaginate, putUpdateDoctor, deleteDoctor, g
     getAllTimeType, getDoctorReport, getClinicReport, getSpecialtiesReport
 } = require('../controllers/adminController');
 const { postCreateBooking, deleteCancelBooking, getScheduleBookking, getBookingPatient,
-    getBookingMonthly, getBookingClinic, getBookingSpecialties
+    getBookingMonthly, getBookingClinic, getBookingSpecialties, getBookingOfClinic, getBookingOfSpecialties
 } = require('../controllers/bookingController');
+const { createPaymentUrl, handleVnpayReturn } = require("../controllers/paymentController");
 const auth = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const checkLogin = require('../middleware/checkLogin');
+const { markAttendanceController, getDoctorNotMarkToday } = require('../controllers/attendanceController');
 const router = express.Router();
 
 
@@ -84,6 +86,7 @@ router.get('/clinics', getAllClinicPaginate);
 router.get('/clinic-info', getClinicInfo);
 router.put('/clinics', putUpdateClinic);
 router.delete('/clinics', deleteClinic);
+router.get('/clinic-booking', getBookingOfClinic);
 
 
 router.post('/specialties', postCreateSpecialties);
@@ -91,6 +94,7 @@ router.get('/specialties', getAllSpecialtiesPaginate);
 router.put('/specialties', putUpdateSpecialties);
 router.delete('/specialties', deleteSpecialties);
 router.get('/specialties-info', getSpecialtiesInfo);
+router.get('/specialties-booking', getBookingOfSpecialties);
 
 router.get('/assign-doctor', getAssignDoctor);
 router.post('/assign-doctor', postAssignDoctor);
@@ -117,6 +121,18 @@ router.get('/specialties-report', getSpecialtiesReport);
 router.get('/booking-monthly', getBookingMonthly);
 router.get('/booking-clinic', getBookingClinic);
 router.get('/booking-specialties', getBookingSpecialties);
+
+
+router.post('/mark-attendance', markAttendanceController);
+router.get('/mark-attendance', getDoctorNotMarkToday);
+
+
+
+router.post("/create_payment_url", createPaymentUrl);
+router.get('/vnpay_return', handleVnpayReturn);
+// router.get("/vnpay_return", paymentController.vnpayReturn);
+// router.get("/vnpay_ipn", paymentController.vnpayIpn);
+// router.post("/querydr", paymentController.queryDr);
 
 
 module.exports = router;

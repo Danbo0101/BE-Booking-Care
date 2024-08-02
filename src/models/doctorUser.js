@@ -1,4 +1,5 @@
 'use strict';
+
 module.exports = (sequelize, DataTypes) => {
   const DoctorUser = sequelize.define('DoctorUser', {
     doctorId: {
@@ -17,8 +18,6 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       },
       allowNull: false,
-
-
     },
     specialtiesId: {
       type: DataTypes.INTEGER,
@@ -28,8 +27,16 @@ module.exports = (sequelize, DataTypes) => {
       },
       allowNull: false,
     },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
     deletedAt: DataTypes.DATE,
   }, {});
 
@@ -38,6 +45,7 @@ module.exports = (sequelize, DataTypes) => {
     DoctorUser.belongsTo(models.Clinic, { foreignKey: 'clinicId', as: 'clinic' });
     DoctorUser.belongsTo(models.Specialties, { foreignKey: 'specialtiesId', as: 'specialties' });
     DoctorUser.hasOne(models.Schedule, { foreignKey: 'doctorId', as: 'schedule' });
+    DoctorUser.hasMany(models.Attendance, { foreignKey: 'doctorId', as: 'attendances' });
   };
 
   return DoctorUser;

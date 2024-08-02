@@ -1,13 +1,11 @@
 'use strict';
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('DoctorUsers', {
-
       doctorId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
         primaryKey: true,
+        allowNull: false,
         references: {
           model: 'Users',
           key: 'id'
@@ -19,7 +17,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Clinics',
+          model: 'Clinics', // Tên bảng tham chiếu
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -29,20 +27,20 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Specialties',
+          model: 'Specialties', // Tên bảng tham chiếu
           key: 'id'
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
       createdAt: {
-        allowNull: false,
         type: Sequelize.DATE,
+        allowNull: false,
         defaultValue: Sequelize.NOW
       },
       updatedAt: {
-        allowNull: false,
         type: Sequelize.DATE,
+        allowNull: false,
         defaultValue: Sequelize.NOW
       },
       deletedAt: {

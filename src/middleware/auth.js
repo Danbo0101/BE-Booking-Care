@@ -11,8 +11,8 @@ const auth = async (req, res, next) => {
             let token = req.headers.authorization.split(' ')[1];
             try {
                 let decoded = jwt.verify(token, process.env.JWT_SECRET);
-                // console.log(decoded);
-                req.user = decoded;  // Lưu thông tin người dùng vào req để sử dụng sau
+                console.log(decoded);
+                req.user = decoded;
                 return next();
             } catch (error) {
                 return res.status(401).json({

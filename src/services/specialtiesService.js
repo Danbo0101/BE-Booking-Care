@@ -1,6 +1,7 @@
 import db from "../models/index";
 
 
+
 const createSpecialties = async (data, file) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -176,7 +177,7 @@ const deleteASpecialties = async (id) => {
                     })
 
 
-                    if (!allDoctor) {
+                    if (allDoctor.length < 1) {
                         let dataDelete = await db.Specialties.update(
                             {
                                 isActive: false
@@ -206,12 +207,15 @@ const deleteASpecialties = async (id) => {
                                 where: { scheduleId: scheduleDoctor[item].id, statusId: 3 }
                             })
 
-                            if (booking) {
+                            console.log(booking.length)
+
+
+                            if (booking.length > 0) {
                                 isExistBooking = 1;
                             }
                         }
 
-                        if (isExistBooking = 1) {
+                        if (isExistBooking === 1) {
                             resolve(
                                 {
                                     ER: 3,
@@ -228,14 +232,24 @@ const deleteASpecialties = async (id) => {
                                     where: { id: id }
                                 }
                             )
-                            let doctorUser = await db.DoctorUser.destoy({
+                            let doctorUser = await db.DoctorUser.destroy({
                                 where: { specialtiesId: id }
                             })
-                            resolve(
-                                {
-                                    ER: 0,
-                                    message: "Xoá chuyên khoa thành công"
-                                });
+
+                            if (dataDelete || doctorUser) {
+                                resolve(
+                                    {
+                                        ER: 0,
+                                        message: "Xoá chuyên khoa thành công"
+                                    });
+                            }
+                            else {
+                                resolve(
+                                    {
+                                        ER: 1,
+                                        message: "Failed to delete specialties"
+                                    });
+                            }
                         }
 
 

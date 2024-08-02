@@ -146,7 +146,7 @@ const getADoctorScheduleBooking = async (queryString) => {
                     let currentTime = new Date();
 
                     for (let item of scheduleDoctor) {
-                        console.log(1)
+                        // console.log(1)
                         let checkStatus = await checkStatusSchedule(item.id);
                         // console.log(checkStatus);
                         if (!checkStatus) {

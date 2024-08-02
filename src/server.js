@@ -6,6 +6,7 @@ const configViewEngine = require('./config/viewEngine.js');
 const connectDB = require('./config/connectDB.js');
 const fileUpload = require('express-fileupload');
 const { default: checkSchedule } = require('./utils/checkSchedule.js');
+const { default: NoticeDoctor } = require('./utils/NoticeDoctor.js');
 
 require('dotenv').config();
 
@@ -35,6 +36,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 configViewEngine(app);
 
 checkSchedule();
+// NoticeDoctor();
 
 // Route
 app.use('/v1/api/', webRoutes);
