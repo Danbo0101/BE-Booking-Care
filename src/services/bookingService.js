@@ -1,3 +1,4 @@
+import { where } from "sequelize";
 import db from "../models/index";
 import checkStatusSchedule from "../utils/checkStatusSchedule";
 import convertFormatDate from "../utils/convertFormatDate";
@@ -51,10 +52,22 @@ const createBooking = async (patientId, data) => {
                             return;
                         }
                         else {
+                            const statusId = data.consultationFee === data.feePaid ? 3 : 7;
+
+                            console.log(data.consultationFee === data.feePaid)
+
                             let createBooking = await db.Booking.create({
                                 scheduleId: data.scheduleId,
                                 patientId: patientId,
-                                statusId: 3
+                                statusId: statusId
+                            })
+
+                            let createInvoices = await db.Invoice.create({
+                                bookingId: createBooking.id,
+                                bookingFee: data.bookingFee,
+                                consultationFee: data.consultationFee,
+                                feePaid: data.feePaid,
+                                date: new Date()
                             })
                             if (createBooking) {
                                 let updateCurrentNumber = await db.Schedule.update(
@@ -79,6 +92,9 @@ const createBooking = async (patientId, data) => {
                                         message: "Đặt lịch khám thất bại"
                                     });
                             }
+
+
+
                         }
 
                     }
@@ -282,7 +298,12 @@ const getBookingAPatient = async (patientId) => {
                     let status = await db.Status.findOne({
                         where: { id: booking.statusId }
                     })
-                    console.log(status);
+
+                    let invoice = await db.Invoice.findOne({
+                        where: { bookingId: booking.id }
+                    })
+
+                    console.log(invoice)
                     result.push({
                         bookingId: booking.id,
                         doctorName: doctor.name,
@@ -292,6 +313,10 @@ const getBookingAPatient = async (patientId) => {
                         date: convertFormatDate(schedule.date),
                         timeTypeName: timeType.name,
                         statusName: status.name,
+                        bookingFee: invoice.bookingFee,
+                        cosultatioFee: invoice.consultationFee,
+                        feePaid: invoice.feePaid,
+                        dateFee: convertFormatDate(invoice.date)
                     })
                 }
                 if (result.length > 0) {
@@ -732,6 +757,22 @@ const bookingOfSpecialties = async (specialtiesId) => {
     })
 }
 
+const AllBookings = async () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let bookings = await db.Booking.findAll();
+
+            resolve({
+                ER: 0,
+                data: bookings
+            });
+
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
 
 
 module.exports = {
@@ -743,5 +784,8 @@ module.exports = {
     bookingClinc,
     bookingSpecialties,
     bookingOfClinic,
-    bookingOfSpecialties
+    bookingOfSpecialties,
+    AllBookings,
+    checkDoctorBooking,
+    checkTimeBooking
 }

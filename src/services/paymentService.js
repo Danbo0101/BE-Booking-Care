@@ -3,7 +3,7 @@ const querystring = require("qs");
 const crypto = require("crypto");
 const vnPayConfig = require("../config/vnpay");
 
-const createPaymentUrls = async (orderId, amount, bankCode, locale, ipAddr) => {
+const createPaymentUrls = async (orderId, orderInfo, amount, bankCode, locale, ipAddr) => {
     process.env.TZ = "Asia/Ho_Chi_Minh";
 
     let date = new Date();
@@ -25,7 +25,7 @@ const createPaymentUrls = async (orderId, amount, bankCode, locale, ipAddr) => {
         vnp_Locale: locale,
         vnp_CurrCode: currCode,
         vnp_TxnRef: orderId,
-        vnp_OrderInfo: `Thanh toán cho hoá đơn :${orderId}`,
+        vnp_OrderInfo: orderInfo,
         vnp_OrderType: "other",
         vnp_Amount: amount * 100,
         vnp_ReturnUrl: returnUrl,

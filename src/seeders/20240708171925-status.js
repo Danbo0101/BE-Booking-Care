@@ -12,7 +12,6 @@ module.exports = {
       createdAt: new Date(),
       updatedAt: new Date()
     },
-
     {
       name: 'Đã đặt',
       createdAt: new Date(),
@@ -29,6 +28,11 @@ module.exports = {
     },
     {
       name: 'Quá hạn',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: 'Đã thanh toán',
       createdAt: new Date(),
       updatedAt: new Date()
     }

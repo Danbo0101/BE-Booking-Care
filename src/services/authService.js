@@ -85,7 +85,7 @@ const sendOtp = async (email) => {
                 const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
                 otpStore[email] = { otpCode, expiresAt: Date.now() + 5 * 60 * 1000 };
                 console.log(`OTP for ${email}:`, otpStore[email]);
-                let result = await sendEmail(email, "OTP", "", "", otpCode);
+                let result = await sendEmail(email, "OTP", "", "", otpCode, "");
                 if (result) {
                     resolve({
                         ER: 0,
@@ -120,7 +120,7 @@ const sendOtpForgot = async (email) => {
                 const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
                 otpStore[email] = { otpCode, expiresAt: Date.now() + 5 * 60 * 1000 };
                 console.log(`OTP for ${email}:`, otpStore[email]);
-                let result = await sendEmail(email, "OTP-FORGOT", "", "", otpCode);
+                let result = await sendEmail(email, "OTP-FORGOT", "", "", otpCode, "");
                 if (result) {
                     resolve({
                         ER: 0,

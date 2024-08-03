@@ -1,6 +1,6 @@
 const { createBooking, cancelBooking, getBookingAPatient, getScheduleForBookking,
     bookingMonthly, bookingClinc, bookingSpecialties, bookingOfClinic,
-    bookingOfSpecialties
+    bookingOfSpecialties, AllBookings, checkDoctorBooking, checkTimeBooking
 } = require('../services/bookingService');
 
 
@@ -153,6 +153,52 @@ const getBookingOfSpecialties = async (req, res) => {
     })
 }
 
+const getAllBookings = async (req, res) => {
+    let result = await AllBookings();
+    return res.status(200).json({
+        ER: result.ER,
+        message: result.message,
+        data: result.data ? result.data : {}
+    })
+}
+
+
+const getCheckTimeBooking = async (req, res) => {
+    let patientId = req.query.patientId;
+    let scheduleId = req.query.scheduleId;
+
+
+    if (!patientId || !scheduleId) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await checkTimeBooking(patientId, scheduleId);
+    return res.status(200).json(result)
+}
+
+const getCheckDoctorBooking = async (req, res) => {
+    let patientId = req.query.patientId;
+    let scheduleId = req.query.scheduleId;
+
+
+
+    if (!patientId || !scheduleId) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
+
+    let result = await checkDoctorBooking(patientId, scheduleId);
+    return res.status(200).json(result)
+}
+
+
+
+
 
 
 module.exports = {
@@ -164,5 +210,8 @@ module.exports = {
     getBookingClinic,
     getBookingSpecialties,
     getBookingOfClinic,
-    getBookingOfSpecialties
+    getBookingOfSpecialties,
+    getAllBookings,
+    getCheckTimeBooking,
+    getCheckDoctorBooking
 }

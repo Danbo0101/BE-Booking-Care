@@ -8,9 +8,9 @@ const createPaymentUrl = async (req, res) => {
             req.socket.remoteAddress ||
             req.connection.socket.remoteAddress;
 
-        let { orderId, amount, bankCode, language } = req.body;
+        let { orderId, orderInfo, amount, bankCode, language } = req.body;
 
-        let paymentUrl = await createPaymentUrls(orderId, amount, bankCode, language, ipAddr);
+        let paymentUrl = await createPaymentUrls(orderId, orderInfo, amount, bankCode, language, ipAddr);
         res.set("Content-Type", "text/html");
         res.send(JSON.stringify(paymentUrl));
     } catch (error) {

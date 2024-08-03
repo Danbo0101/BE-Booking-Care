@@ -352,7 +352,7 @@ const updateDoctorSchedule = async (scheduleId, data) => {
 
                 fetchEmails().then(listEmailPatient => {
                     console.log(listEmailPatient);
-                    sendEmail(listEmailPatient, "Cancel Booking", doctor.name, formattedDate)
+                    sendEmail(listEmailPatient, "Cancel Booking", doctor.name, formattedDate, "", "")
                 }).catch(error => {
                     console.error("Error fetching emails:", error);
                 });

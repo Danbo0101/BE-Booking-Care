@@ -34,6 +34,7 @@ module.exports = (sequelize, DataTypes) => {
     Booking.belongsTo(models.Schedule, { foreignKey: 'scheduleId', as: 'schedule' });
     Booking.belongsTo(models.User, { foreignKey: 'patientId', as: 'patient' });
     Booking.belongsTo(models.Status, { foreignKey: 'statusId', as: 'status' });
+    Booking.hasOne(models.Invoice, { foreignKey: 'bookingId', as: 'invoice' });
   };
 
   return Booking;

@@ -36,7 +36,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 configViewEngine(app);
 
 checkSchedule();
-// NoticeDoctor();
+NoticeDoctor();
 
 // Route
 app.use('/v1/api/', webRoutes);

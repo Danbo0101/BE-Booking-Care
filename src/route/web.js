@@ -11,7 +11,8 @@ const { postCreateDoctor, getAllDoctorPaginate, putUpdateDoctor, deleteDoctor, g
     getAllTimeType, getDoctorReport, getClinicReport, getSpecialtiesReport
 } = require('../controllers/adminController');
 const { postCreateBooking, deleteCancelBooking, getScheduleBookking, getBookingPatient,
-    getBookingMonthly, getBookingClinic, getBookingSpecialties, getBookingOfClinic, getBookingOfSpecialties
+    getBookingMonthly, getBookingClinic, getBookingSpecialties, getBookingOfClinic,
+    getBookingOfSpecialties, getAllBookings, getCheckTimeBooking, getCheckDoctorBooking
 } = require('../controllers/bookingController');
 const { createPaymentUrl, handleVnpayReturn } = require("../controllers/paymentController");
 const auth = require('../middleware/auth');
@@ -110,6 +111,7 @@ router.put('/schedules', putUpdateDoctorSchedule);
 router.post('/bookings', postCreateBooking);
 router.delete('/bookings', deleteCancelBooking);
 router.get('/bookings', getScheduleBookking);
+router.get('/all-bookings', getAllBookings);
 router.get('/history-bookings', getBookingPatient);
 
 router.get('/time-type', getAllTimeType);
@@ -118,6 +120,8 @@ router.get('/doctor-report', getDoctorReport);
 router.get('/clinic-report', getClinicReport);
 router.get('/specialties-report', getSpecialtiesReport);
 
+router.get('/checkTimeBooking', getCheckTimeBooking);
+router.get('/checkDoctorBooking', getCheckDoctorBooking);
 router.get('/booking-monthly', getBookingMonthly);
 router.get('/booking-clinic', getBookingClinic);
 router.get('/booking-specialties', getBookingSpecialties);

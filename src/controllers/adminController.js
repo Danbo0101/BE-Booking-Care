@@ -282,6 +282,8 @@ const getDoctorForSpecialtiesPaginate = async (req, res) => {
 const getDoctorForClinicPaginate = async (req, res) => {
     let clinicId = req.query.clinicId;
 
+    console.log(clinicId)
+
     if (!clinicId) {
         return res.status(500).json({
             ER: 1,
@@ -290,6 +292,8 @@ const getDoctorForClinicPaginate = async (req, res) => {
     }
 
     let result = await getDoctorForClinic(clinicId)
+
+    console.log(result)
 
     return res.status(200).json({
         ER: result.ER,
