@@ -63,9 +63,6 @@ const doctorReport = async (doctorId, month, year) => {
                     }
 
                 })
-
-
-
             } else {
                 resolve({
                     ER: 1,

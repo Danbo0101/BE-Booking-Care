@@ -6,7 +6,7 @@ import convertFormatDate from "../utils/convertFormatDate";
 const createBooking = async (patientId, data) => {
     return new Promise(async (resolve, reject) => {
         try {
-
+            // check khách hàng có tồn tại hay không
             let isExistPantient = await db.User.findOne({
                 where: { id: patientId, roleId: 3, isActive: true }
             })
@@ -14,16 +14,16 @@ const createBooking = async (patientId, data) => {
                 resolve(
                     {
                         ER: 2,
-                        message: "Không tìm thấy bệnh nhân"
+                        message: "Không tìm thấy khách hàng"
                     });
                 return;
             }
             else {
-
                 let checkSchedule = await db.Schedule.findOne({
                     where: { id: data.scheduleId }
                 })
                 if (checkSchedule) {
+                    //kiểm tra trạng thái của lịch làm
                     let checkStatus = await checkStatusSchedule(checkSchedule.id)
                     if (!checkStatus) {
                         resolve(
@@ -33,6 +33,7 @@ const createBooking = async (patientId, data) => {
                             });
                         return;
                     } else {
+                        // kiểm tra lịch đặt có bị trùng thời gian hoặc bác sĩ hay không
                         let isExistTimeBooking = await checkTimeBooking(patientId, data.scheduleId);
                         let isExistDoctorBooking = await checkDoctorBooking(patientId, data.scheduleId);
                         if (isExistTimeBooking) {
@@ -52,10 +53,9 @@ const createBooking = async (patientId, data) => {
                             return;
                         }
                         else {
+                            // xử lý đặt lịch cho khách hàng
                             const statusId = data.consultationFee === data.feePaid ? 3 : 7;
-
-                            console.log(data.consultationFee === data.feePaid)
-
+                            // console.log(data.consultationFee === data.feePaid)
                             let createBooking = await db.Booking.create({
                                 scheduleId: data.scheduleId,
                                 patientId: patientId,
@@ -92,25 +92,20 @@ const createBooking = async (patientId, data) => {
                                         message: "Đặt lịch khám thất bại"
                                     });
                             }
-
-
-
                         }
-
                     }
                 }
                 else {
                     resolve(
                         {
                             ER: 2,
-                            message: "Schedule not found or inactive"
+                            message: "Lịch làm không tồn tại"
                         });
                     return;
                 }
-
             }
         } catch (error) {
-
+            reject(error)
         }
     })
 }
@@ -118,27 +113,37 @@ const createBooking = async (patientId, data) => {
 const checkDoctorBooking = async (patientId, scheduleId) => {
     return new Promise(async (resolve, reject) => {
         try {
+            //tìm tất cả lịch đã đặt của khách hàng 
             let bookingPatient = await db.Booking.findAll({
-                where: { patientId, statusId: 3 }
+                where: { patientId }
             })
+            // lọc ra các lịch booking đang ở trạng thái đã đặt hoặc đã thanh toán
+            const filteredBookingPatients = bookingPatient.filter(booking =>
+                booking.statusId === 3 || booking.statusId === 7
+            );
 
-            if (bookingPatient) {
+            if (filteredBookingPatients.length > 0) {
+                // tìm lịch làm của bác sĩ 
                 let doctorBooking = await db.Schedule.findOne({
                     where: { id: +scheduleId }
                 });
-                let check = false;
 
-                for (const booking of bookingPatient) {
+                let check = false;
+                // lọc trong các lịch đặt của khách hàng
+                for (const booking of filteredBookingPatients) {
+                    // tìm lịch làm theo các lịch đặt
                     let doctorBooked = await db.Schedule.findOne({
                         where: { id: booking.scheduleId }
                     });
+
+                    // so sáng bác sĩ có trùng hay không và ngày có trùng hay không
                     if (doctorBooked.doctorId === doctorBooking.doctorId &&
                         (doctorBooked.date).toString() === doctorBooking.date.toString()) {
+                        //nếu có set biến check = true và trả về
                         check = true;
                         break;
                     }
                 }
-
                 if (check) {
                     resolve(true);
                 } else {
@@ -146,9 +151,8 @@ const checkDoctorBooking = async (patientId, scheduleId) => {
                 }
             }
             else resolve(false);
-
         } catch (error) {
-
+            reject(error);
         }
     })
 }
@@ -156,28 +160,36 @@ const checkDoctorBooking = async (patientId, scheduleId) => {
 const checkTimeBooking = async (patientId, scheduleId) => {
     return new Promise(async (resolve, reject) => {
         try {
+            // tìm tất cả lịch đã đặt của khách hàng
             let bookingPatient = await db.Booking.findAll({
-                where: { patientId, statusId: 3 }
+                where: { patientId }
             });
-
-            if (bookingPatient.length > 0) {
+            // lọc ra các lịch booking đang ở trạng thái đã đặt hoặc đã thanh toán
+            const filteredBookingPatients = bookingPatient.filter(booking =>
+                booking.statusId === 3 || booking.statusId === 7
+            );
+            // console.log(scheduleId)
+            if (filteredBookingPatients.length > 0) {
+                // tìm lịch làm của bác sĩ
                 let bookPatient = await db.Schedule.findOne({
                     where: { id: +scheduleId }
                 });
 
                 let check = false;
 
-                for (const booking of bookingPatient) {
+                for (const booking of filteredBookingPatients) {
+                    // tìm lịch làm theo các lịch đặt
                     let bookedPatient = await db.Schedule.findOne({
                         where: { id: booking.scheduleId }
                     });
+                    // so sánh thời gian và ngày có bị trùng hay không
                     if (bookedPatient.timeTypeId === bookPatient.timeTypeId &&
                         bookedPatient.date.toString() === bookPatient.date.toString()) {
+                        // nếu có trả về true
                         check = true;
                         break;
                     }
                 }
-
                 if (check) {
                     resolve(true);
                 } else {
@@ -189,7 +201,6 @@ const checkTimeBooking = async (patientId, scheduleId) => {
         } catch (error) {
             reject(error);
         }
-
     })
 }
 
@@ -198,6 +209,7 @@ const cancelBooking = async (queryString) => {
         try {
             let patientId = queryString.patientId;
             let bookingId = queryString.bookingId;
+            // kiểm tra id của khách hàng và id của booking có tồn tại không
             if (!patientId || !bookingId) {
                 resolve(
                     {
@@ -207,6 +219,7 @@ const cancelBooking = async (queryString) => {
                 return;
             }
             else {
+                // xử lý huỷ lịch đặt
                 let isExistBooking = await db.Booking.findOne({
                     where: { id: bookingId, patientId }
                 })
@@ -214,7 +227,7 @@ const cancelBooking = async (queryString) => {
                     resolve(
                         {
                             ER: 2,
-                            message: "Booking not found"
+                            message: "Lịch đặt không tồn tại"
                         });
                     return;
                 }
@@ -243,7 +256,7 @@ const cancelBooking = async (queryString) => {
                             resolve(
                                 {
                                     ER: 0,
-                                    message: "Booking cancelled successfully"
+                                    message: "Huỷ lịch đặt thành công"
                                 });
                         }
 
@@ -252,7 +265,7 @@ const cancelBooking = async (queryString) => {
                         resolve(
                             {
                                 ER: 3,
-                                message: "Booking cancellation failed"
+                                message: "Huỷ lịch đặt thất bại"
                             });
                     }
                 }
@@ -323,7 +336,7 @@ const getBookingAPatient = async (patientId) => {
                     resolve(
                         {
                             ER: 0,
-                            message: "Get Bookings Success",
+                            message: "Lấy lịch đặt thành công",
                             data: result
                         });
                 }
@@ -331,14 +344,14 @@ const getBookingAPatient = async (patientId) => {
                     resolve(
                         {
                             ER: 2,
-                            message: "No booking found"
+                            message: "Không tìm thấy lịch đặt"
                         });
                 }
             } else {
                 resolve(
                     {
                         ER: 2,
-                        message: "Patient not found or inactive"
+                        message: "Khách hàng không tồn tại"
                     });
                 return;
             }
@@ -414,9 +427,7 @@ const getScheduleForBookking = async (scheduleId) => {
 const bookingMonthly = async (year) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let booking = await db.Booking.findAll({
-                where: { statusId: 3 }
-            });
+            let booking = await db.Booking.findAll();
 
             let data = await Promise.all(booking.map(async (item) => {
                 let schedule = await db.Schedule.findOne({

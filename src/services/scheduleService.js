@@ -80,7 +80,7 @@ const createSchedule = async (doctorId, data) => {
                     timeTypeId: data.timeTypeId,
                     statusId: 1,
                     date: new Date(data.date),
-                    maxNumber: +data.maxNumber
+                    maxNumber: +data.maxNumber - data.bookedNumber
                 }
 
                 let createSchedule = await db.Schedule.create(dataCreateSchedule);

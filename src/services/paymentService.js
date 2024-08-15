@@ -48,29 +48,6 @@ const createPaymentUrls = async (orderId, orderInfo, amount, bankCode, locale, i
     return vnpUrl;
 }
 
-const verifyVnpayReturn = async (queryParams) => {
-    const secureHash = queryParams.vnp_SecureHash;
-
-    delete queryParams.vnp_SecureHash;
-    delete queryParams.vnp_SecureHashType;
-
-    const sortedParams = sortObject(queryParams);
-    const secretKey = vnPayConfig.vnp_HashSecret;
-    const signData = querystring.stringify(sortedParams, { encode: false });
-    const hmac = crypto.createHmac("sha512", secretKey);
-    const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
-
-    // console.log('Received Secure Hash:', secureHash);
-    // console.log('Calculated Secure Hash:', signed);
-    // console.log('Sign Data:', signData);
-
-    return {
-        isValid: secureHash === signed,
-        queryParams: queryParams,
-        queryString: querystring.stringify(queryParams)
-    };
-};
-
 const sortObject = (obj) => {
     let sorted = {};
     let str = [];
@@ -89,6 +66,5 @@ const sortObject = (obj) => {
 
 module.exports = {
     createPaymentUrls,
-    verifyVnpayReturn
 };
 

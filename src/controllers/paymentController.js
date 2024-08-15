@@ -1,4 +1,4 @@
-const { createPaymentUrls, verifyVnpayReturn } = require("../services/paymentService");
+const { createPaymentUrls } = require("../services/paymentService");
 
 const createPaymentUrl = async (req, res) => {
     try {
@@ -18,22 +18,7 @@ const createPaymentUrl = async (req, res) => {
     }
 }
 
-const handleVnpayReturn = async (req, res) => {
-    const queryParams = req.query;
-    console.log('Received Query Params:', queryParams);
-    const result = await verifyVnpayReturn(queryParams);
-
-    if (result.isValid) {
-        console.log('Payment success:', result.queryParams);
-        res.redirect(`http://localhost:5173/booking-success?${result.queryString}`);
-
-    } else {
-        console.log('Payment failed due to invalid secure hash');
-        res.redirect('http://localhost:5173/booking-success??status=failed');
-    }
-};
-
 module.exports = {
     createPaymentUrl,
-    handleVnpayReturn
+
 };

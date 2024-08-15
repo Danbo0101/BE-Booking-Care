@@ -66,13 +66,10 @@ const getDoctors = async (queryString) => {
                         where: { doctorId: user.id }
                     });
 
-                    // Fetch doctor specialty for the user
                     const doctorSpecialty = await db.DoctorUser.findOne({
                         where: { doctorId: user.id }
                     });
 
-
-                    // Fetch the specialty details
                     const specialty = doctorSpecialty ? await db.Specialties.findOne({
                         where: { id: doctorSpecialty.specialtiesId, isActive: true }
                     }) : null;
@@ -123,14 +120,10 @@ const getDoctors = async (queryString) => {
                         where: { doctorId: user.id }
                     });
 
-                    // Fetch doctor specialty for the user
                     const doctorSpecialty = await db.DoctorUser.findOne({
                         where: { doctorId: user.id }
                     });
 
-
-
-                    // Fetch the specialty details
                     const specialty = doctorSpecialty ? await db.Specialties.findOne({
                         where: { id: doctorSpecialty.specialtiesId, isActive: true }
                     }) : null;
@@ -195,6 +188,8 @@ const updateDoctor = async (id, data, file) => {
                         });
                     return;
                 } else {
+
+                    console.log(isExist)
                     let updateFields = {
                         name: data.name,
                         email: data.email,

@@ -5,6 +5,7 @@ const handlebars = require('handlebars');
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (email, subject, nameDoctor, date, otp, timeType) => {
+    // cấu hình cho nodemailer
     const transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         service: "Gmail",
@@ -16,11 +17,11 @@ const sendEmail = async (email, subject, nameDoctor, date, otp, timeType) => {
 
 
     if (subject === "Cancel Booking") {
+        //biên dịch file html và thay thế các biến vào trong file html
         const filePath = path.join(__dirname, "../views/cancel-booking.html");
         // console.log(filePath);
         const source = fs.readFileSync(filePath, 'utf8').toString();
         const template = handlebars.compile(source);
-
         const replacements = {
             nameDoctor,
             date

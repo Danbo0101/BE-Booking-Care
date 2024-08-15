@@ -14,7 +14,7 @@ const { postCreateBooking, deleteCancelBooking, getScheduleBookking, getBookingP
     getBookingMonthly, getBookingClinic, getBookingSpecialties, getBookingOfClinic,
     getBookingOfSpecialties, getAllBookings, getCheckTimeBooking, getCheckDoctorBooking
 } = require('../controllers/bookingController');
-const { createPaymentUrl, handleVnpayReturn } = require("../controllers/paymentController");
+const { createPaymentUrl } = require("../controllers/paymentController");
 const auth = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const checkLogin = require('../middleware/checkLogin');
@@ -133,7 +133,7 @@ router.get('/mark-attendance', getDoctorNotMarkToday);
 
 
 router.post("/create_payment_url", createPaymentUrl);
-router.get('/vnpay_return', handleVnpayReturn);
+// router.get('/vnpay_return', handleVnpayReturn);
 // router.get("/vnpay_return", paymentController.vnpayReturn);
 // router.get("/vnpay_ipn", paymentController.vnpayIpn);
 // router.post("/querydr", paymentController.queryDr);

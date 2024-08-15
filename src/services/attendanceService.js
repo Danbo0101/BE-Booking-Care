@@ -1,15 +1,16 @@
 'use strict';
-import sendEmail from '../middleware/sendEmail';
 import db from '../models/index';
-const { Op } = require('sequelize');
+
 
 const markAttendance = async (doctorId) => {
     try {
+        //lấy ngày hiện tại
         const today = new Date().toISOString().split('T')[0];
 
         const doctorExists = await db.DoctorUser.findOne({
             where: { doctorId: doctorId }
         });
+        //tìm kiếm và tạo mới điểm danh cho bác sĩ
         let result = await db.Attendance.findOrCreate({
             where: {
                 doctorId,
@@ -21,62 +22,24 @@ const markAttendance = async (doctorId) => {
         })
         return result;
     } catch (error) {
-        console.error('Error marking attendance:', error);
-        throw new Error('Could not mark attendance');
-    }
-}
-
-const getAttendanceByDate = async (date) => {
-    try {
-        return await db.Attendance.findAll({
-            where: {
-                date
-            },
-            include: [
-                {
-                    model: db.DoctorUser,
-                    as: 'doctor',
-                    attributes: ['doctorId', 'clinicId', 'specialtiesId']
-                }
-            ]
-        });
-    } catch (error) {
-        console.error('Error fetching attendance:', error);
-        throw new Error('Could not fetch attendance');
-    }
-}
-
-const checkDoctorAttendance = async (doctorId) => {
-    try {
-        const today = new Date().toISOString().split('T')[0];
-
-        const attendance = await db.Attendance.findOne({
-            where: {
-                doctorId,
-                date: today
-            }
-        });
-
-        return attendance ? attendance.isPresent : false;
-    } catch (error) {
-        console.error('Error checking doctor attendance:', error);
-        throw new Error('Could not check doctor attendance');
+        console.log(error);
     }
 }
 
 const getAllDoctorNotMarkToday = async () => {
     return new Promise(async (resolve, reject) => {
         try {
-
+            // lấy danh sách tất cả bác sĩ
             let allDoctors = await db.User.findAll({
                 where: { roleId: 2, isActive: true },
                 attributes: ['id', 'name', 'email', 'phone']
             });
-
+            // thiết lập date đầu ngày và cuối ngày hiện tại
             let currentDate = new Date();
             let startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
             let endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 1);
+            // kiểm tra các bác sĩ có lịch trong date đã điểm danh hay chưa
             let allSchedules = await db.Schedule.findAll({
                 where: {
                     date: {
@@ -107,7 +70,7 @@ const getAllDoctorNotMarkToday = async () => {
             resolve(
                 {
                     ER: 0,
-                    message: "Get doctor not mark today success",
+                    message: "Lấy danh sách các bác sĩ chưa điểm danh hôm nay thành công",
                     data: doctorsNotMarkedToday
                 }
             )
@@ -120,7 +83,5 @@ const getAllDoctorNotMarkToday = async () => {
 
 export {
     markAttendance,
-    getAttendanceByDate,
-    checkDoctorAttendance,
     getAllDoctorNotMarkToday
 };

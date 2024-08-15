@@ -39,7 +39,12 @@ const putUpdateDoctor = async (req, res) => {
 
     // let image = req.files.image.data;
     let id = req.query.id;
-    console.log(id)
+    if (!id) {
+        return res.status(500).json({
+            ER: 1,
+            message: "Missing input parameter"
+        })
+    }
     let result = await updateDoctor(id, req.body, req.files);
 
     // console.log(result);

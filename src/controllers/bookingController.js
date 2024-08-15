@@ -103,6 +103,7 @@ const getBookingClinic = async (req, res) => {
         data: result.data ? result.data : {}
     })
 }
+
 const getBookingSpecialties = async (req, res) => {
 
     let result = await bookingSpecialties();
@@ -162,7 +163,6 @@ const getAllBookings = async (req, res) => {
     })
 }
 
-
 const getCheckTimeBooking = async (req, res) => {
     let patientId = req.query.patientId;
     let scheduleId = req.query.scheduleId;
@@ -195,11 +195,6 @@ const getCheckDoctorBooking = async (req, res) => {
     let result = await checkDoctorBooking(patientId, scheduleId);
     return res.status(200).json(result)
 }
-
-
-
-
-
 
 module.exports = {
     postCreateBooking,
